@@ -6,6 +6,7 @@ import (
 	"encoding/asn1"
 	"fmt"
 
+	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
 )
 
@@ -23,18 +24,18 @@ func init() {
 //
 // This extension MAY, at the option of the certificate issuer, be either critical or non-critical.
 //
-func Check(e pkix.Extension, c *x509.Certificate) []error {
+func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
 	// RFC: In general, this extension will appear only in end entity certificates.
-	if c.IsCA {
+	if d.Cert.IsCA {
 		errors = append(errors, fmt.Errorf("In general ExtKeyUsage will appear only in end entity certificates"))
 	}
 
 	// RFC: Conforming CAs	SHOULD NOT mark this extension as critical if the
 	// anyExtendedKeyUsage KeyPurposeId is present.
 	if e.Critical {
-		for _, ku := range c.ExtKeyUsage {
+		for _, ku := range d.Cert.ExtKeyUsage {
 			if ku == x509.ExtKeyUsageAny {
 				errors = append(errors, fmt.Errorf("ExtKeyUsage extention SHOULD NOT be critical if anyExtendedKeyUsage is present"))
 				break

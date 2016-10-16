@@ -1,10 +1,11 @@
 package keyusage
 
 import (
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
+
+	"github.com/globalsign/certlint/certdata"
 
 	"github.com/globalsign/certlint/checks"
 )
@@ -21,7 +22,7 @@ func init() {
 //
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.3
 //
-func Check(e pkix.Extension, c *x509.Certificate) []error {
+func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
 	if !e.Critical {

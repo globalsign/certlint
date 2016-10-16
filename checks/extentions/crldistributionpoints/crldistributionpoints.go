@@ -1,10 +1,11 @@
 package crldistributionpoints
 
 import (
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
+
+	"github.com/globalsign/certlint/certdata"
 
 	"github.com/globalsign/certlint/checks"
 )
@@ -18,7 +19,7 @@ func init() {
 }
 
 // Check performs a strict verification on the extention according to the standard(s)
-func Check(e pkix.Extension, c *x509.Certificate) []error {
+func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
 	if e.Critical {

@@ -1,11 +1,12 @@
 package nameconstraints
 
 import (
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
 
+	"crypto/x509/pkix"
+
+	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
 )
 
@@ -18,7 +19,7 @@ func init() {
 }
 
 // Check performs a strict verification on the extention according to the standard(s)
-func Check(e pkix.Extension, c *x509.Certificate) []error {
+func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
 	// NameConstraints do officially need to be set critical, often they are not
@@ -29,7 +30,7 @@ func Check(e pkix.Extension, c *x509.Certificate) []error {
 	}
 
 	// NameConstraints should only be included in CA or subordinate certificates
-	if !c.IsCA {
+	if !d.Cert.IsCA {
 		errors = append(errors, fmt.Errorf("End entity certificate should not contain a NameConstraints extention"))
 	}
 
