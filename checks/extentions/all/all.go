@@ -6,6 +6,7 @@ import (
 	_ "github.com/globalsign/certlint/checks/extentions/authoritykeyid"
 	_ "github.com/globalsign/certlint/checks/extentions/basicconstraints"
 	_ "github.com/globalsign/certlint/checks/extentions/crldistributionpoints"
+	_ "github.com/globalsign/certlint/checks/extentions/ct"
 	_ "github.com/globalsign/certlint/checks/extentions/extkeyusage"
 	_ "github.com/globalsign/certlint/checks/extentions/keyusage"
 	_ "github.com/globalsign/certlint/checks/extentions/nameconstraints"
