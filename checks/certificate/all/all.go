@@ -13,6 +13,7 @@ import (
 	_ "github.com/globalsign/certlint/checks/certificate/publicsuffix"
 	_ "github.com/globalsign/certlint/checks/certificate/revocation"
 	_ "github.com/globalsign/certlint/checks/certificate/signaturealgorithm"
+	_ "github.com/globalsign/certlint/checks/certificate/subject"
 	_ "github.com/globalsign/certlint/checks/certificate/subjectaltname"
 	_ "github.com/globalsign/certlint/checks/certificate/validity"
 	_ "github.com/globalsign/certlint/checks/certificate/version"
