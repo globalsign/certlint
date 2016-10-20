@@ -40,7 +40,8 @@ func Check(e pkix.Extension, d *certdata.Data) []error {
 		// ones that contain key management public keys used with certificate
 		// enrollment protocols.
 		//
-		// TODO: Does it always need to be critical in CA certificates?
+		// The CA Browser Forum BR 1.4.1 state that it should always be true for
+		// CA certificates.
 		if !e.Critical {
 			errors = append(errors, fmt.Errorf("BasicConstraints extention must be critical in CA certificates"))
 		}
