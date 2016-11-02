@@ -15,7 +15,7 @@ func init() {
 	checks.RegisterCertificateCheck(checkName, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 func Check(d *certdata.Data) []error {
 	gkp := goodkey.NewKeyPolicy()
 	err := gkp.GoodKey(d.Cert.PublicKey)

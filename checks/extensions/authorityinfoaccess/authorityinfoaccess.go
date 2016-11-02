@@ -10,21 +10,21 @@ import (
 	"github.com/globalsign/certlint/checks"
 )
 
-const checkName = "AuthorityInfoAccess Extention Check"
+const checkName = "AuthorityInfoAccess Extension Check"
 
-var extentionOid = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 1}
+var extensionOid = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 1}
 
 func init() {
-	checks.RegisterExtentionCheck(checkName, extentionOid, nil, Check)
+	checks.RegisterExtensionCheck(checkName, extensionOid, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 // TODO: Add more checks https://golang.org/src/github.com/globalsign/certlint/certdata/x509.go?s=15439:18344#L1157
 func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
 	if e.Critical {
-		errors = append(errors, fmt.Errorf("AuthorityInfoAccess extention set critical"))
+		errors = append(errors, fmt.Errorf("AuthorityInfoAccess extension set critical"))
 	}
 
 	return errors

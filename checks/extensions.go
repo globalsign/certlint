@@ -12,28 +12,28 @@ import (
 
 var extMutex = &sync.Mutex{}
 
-type extentions []extentionCheck
+type extensions []extensionCheck
 
-type extentionCheck struct {
+type extensionCheck struct {
 	name   string
 	oid    asn1.ObjectIdentifier
 	filter *Filter
 	f      func(pkix.Extension, *certdata.Data) []error
 }
 
-// Extentions contains all imported extention checks
-var Extentions extentions
+// Extensions contains all imported extension checks
+var Extensions extensions
 
-// RegisterExtentionCheck adds a new check to Extentions
-func RegisterExtentionCheck(name string, oid asn1.ObjectIdentifier, filter *Filter, f func(pkix.Extension, *certdata.Data) []error) {
+// RegisterExtensionCheck adds a new check to Extensions
+func RegisterExtensionCheck(name string, oid asn1.ObjectIdentifier, filter *Filter, f func(pkix.Extension, *certdata.Data) []error) {
 	extMutex.Lock()
-	Extentions = append(Extentions, extentionCheck{name, oid, filter, f})
+	Extensions = append(Extensions, extensionCheck{name, oid, filter, f})
 	extMutex.Unlock()
 }
 
-// Check lookups the registered extention checks and runs all checks with the
+// Check lookups the registered extension checks and runs all checks with the
 // same Object Identifier.
-func (e extentions) Check(ext pkix.Extension, d *certdata.Data) []error {
+func (e extensions) Check(ext pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 	var found bool
 
@@ -49,7 +49,7 @@ func (e extentions) Check(ext pkix.Extension, d *certdata.Data) []error {
 
 	if !found {
 		// Don't report private enterprise extensions as unknown, registered private
-		// extentions have still been checked above.
+		// extensions have still been checked above.
 		if !strings.HasPrefix(ext.Id.String(), "1.3.6.1.4.1.") {
 			errors = append(errors, fmt.Errorf("Certificate contains unknown extension (%s)", ext.Id.String()))
 		}

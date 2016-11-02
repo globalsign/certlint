@@ -17,7 +17,7 @@ func init() {
 	checks.RegisterCertificateCheck(checkName, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 // checkKeyUsageExtension verifies if the the required/allowed keyusages are set
 //
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.3

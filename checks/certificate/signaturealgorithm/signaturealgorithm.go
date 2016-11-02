@@ -18,7 +18,7 @@ func init() {
 	checks.RegisterCertificateCheck(checkName, filter, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 func Check(d *certdata.Data) []error {
 	// Check if we use SHA1 or less (MD5, MD2)
 	if d.Cert.SignatureAlgorithm > x509.SHA1WithRSA &&

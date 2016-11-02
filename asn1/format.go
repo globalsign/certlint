@@ -18,7 +18,7 @@ var formatGeneralizedTime = regexp.MustCompile("^([0-9]{4})([01][0-9])([0-3][0-9
 // CheckFormat returns a list of formatting errors based on the expected ASN1
 // encoding according to the class and tag of the raw value.
 // TODO: Create checks for remaining class 0 tags
-// TODO: Should we create extentions for other classes, even include class 0?
+// TODO: Should we create extensions for other classes, even include class 0?
 func CheckFormat(d asn1.RawValue) []error {
 	var errors []error
 

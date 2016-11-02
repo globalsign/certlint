@@ -16,7 +16,7 @@ func init() {
 	checks.RegisterCertificateCheck(checkName, filter, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 // TODO: Add more checks https://golang.org/src/crypto/x509/x509.go?s=15439:18344#L1157
 func Check(d *certdata.Data) []error {
 	var errors []error

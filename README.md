@@ -69,15 +69,15 @@ import "github.com/globalsign/certlint/checks"
 
 You can import all available checks:
 ```go
-_ "github.com/globalsign/certlint/checks/extentions/all"
+_ "github.com/globalsign/certlint/checks/extensions/all"
 _ "github.com/globalsign/certlint/checks/certificate/all"
 ```
 
 Or you can just import a restricted set:
 ```go
-// Check for certificate (ext) KeyUsage extention
-_ "github.com/globalsign/certlint/checks/extentions/extkeyusage"
-_ "github.com/globalsign/certlint/checks/extentions/keyusage"
+// Check for certificate (ext) KeyUsage extension
+_ "github.com/globalsign/certlint/checks/extensions/extkeyusage"
+_ "github.com/globalsign/certlint/checks/extensions/keyusage"
 
 // Also check the parsed certificate (ext) keyusage content
 _ "github.com/globalsign/certlint/checks/certificate/extkeyusage"

@@ -17,7 +17,7 @@ func init() {
 	checks.RegisterCertificateCheck(checkName, filter, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 func Check(d *certdata.Data) []error {
 	return checkDN(d.Type, d.Cert.Subject.Names)
 }

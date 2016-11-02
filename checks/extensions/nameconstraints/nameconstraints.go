@@ -10,15 +10,15 @@ import (
 	"github.com/globalsign/certlint/checks"
 )
 
-const checkName = "NameConstraints Extention Check"
+const checkName = "NameConstraints Extension Check"
 
-var extentionOid = asn1.ObjectIdentifier{2, 5, 29, 30}
+var extensionOid = asn1.ObjectIdentifier{2, 5, 29, 30}
 
 func init() {
-	checks.RegisterExtentionCheck(checkName, extentionOid, nil, Check)
+	checks.RegisterExtensionCheck(checkName, extensionOid, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 func Check(e pkix.Extension, d *certdata.Data) []error {
 	var errors []error
 
@@ -26,12 +26,12 @@ func Check(e pkix.Extension, d *certdata.Data) []error {
 	// because many implementations still don't support Name Constraints.
 	// TODO: Only show a warning message
 	if !e.Critical {
-		errors = append(errors, fmt.Errorf("NameConstraints extention set non-critical"))
+		errors = append(errors, fmt.Errorf("NameConstraints extension set non-critical"))
 	}
 
 	// NameConstraints should only be included in CA or subordinate certificates
 	if !d.Cert.IsCA {
-		errors = append(errors, fmt.Errorf("End entity certificate should not contain a NameConstraints extention"))
+		errors = append(errors, fmt.Errorf("End entity certificate should not contain a NameConstraints extension"))
 	}
 
 	return errors

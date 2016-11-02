@@ -10,15 +10,15 @@ import (
 	"github.com/globalsign/certlint/checks"
 )
 
-const checkName = "ExtKeyUsage Extention Check"
+const checkName = "ExtKeyUsage Extension Check"
 
-var extentionOid = asn1.ObjectIdentifier{2, 5, 29, 37}
+var extensionOid = asn1.ObjectIdentifier{2, 5, 29, 37}
 
 func init() {
-	checks.RegisterExtentionCheck(checkName, extentionOid, nil, Check)
+	checks.RegisterExtensionCheck(checkName, extensionOid, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 //
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.12
 //
@@ -37,7 +37,7 @@ func Check(e pkix.Extension, d *certdata.Data) []error {
 	if e.Critical {
 		for _, ku := range d.Cert.ExtKeyUsage {
 			if ku == x509.ExtKeyUsageAny {
-				errors = append(errors, fmt.Errorf("ExtKeyUsage extention SHOULD NOT be critical if anyExtendedKeyUsage is present"))
+				errors = append(errors, fmt.Errorf("ExtKeyUsage extension SHOULD NOT be critical if anyExtendedKeyUsage is present"))
 				break
 			}
 		}

@@ -10,15 +10,15 @@ import (
 	"github.com/globalsign/certlint/checks"
 )
 
-const checkName = "BasicConstraints Extention Check"
+const checkName = "BasicConstraints Extension Check"
 
-var extentionOid = asn1.ObjectIdentifier{2, 5, 29, 19}
+var extensionOid = asn1.ObjectIdentifier{2, 5, 29, 19}
 
 func init() {
-	checks.RegisterExtentionCheck(checkName, extentionOid, nil, Check)
+	checks.RegisterExtensionCheck(checkName, extensionOid, nil, Check)
 }
 
-// Check performs a strict verification on the extention according to the standard(s)
+// Check performs a strict verification on the extension according to the standard(s)
 //
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.9
 //
@@ -43,7 +43,7 @@ func Check(e pkix.Extension, d *certdata.Data) []error {
 		// The CA Browser Forum BR 1.4.1 state that it should always be true for
 		// CA certificates.
 		if !e.Critical {
-			errors = append(errors, fmt.Errorf("BasicConstraints extention must be critical in CA certificates"))
+			errors = append(errors, fmt.Errorf("BasicConstraints extension must be critical in CA certificates"))
 		}
 	}
 

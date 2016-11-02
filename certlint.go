@@ -27,7 +27,7 @@ import (
 
 	// Import all availible checks
 	_ "github.com/globalsign/certlint/checks/certificate/all"
-	_ "github.com/globalsign/certlint/checks/extentions/all"
+	_ "github.com/globalsign/certlint/checks/extensions/all"
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/revoke"
