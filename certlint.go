@@ -33,7 +33,7 @@ import (
 	"github.com/cloudflare/cfssl/revoke"
 	"github.com/golang/groupcache/lru"
 
-	"github.com/davecheney/profile"
+	"github.com/pkg/profile"
 )
 
 type testResult struct {
@@ -68,11 +68,7 @@ func main() {
 	}
 
 	if *pprof {
-		defer profile.Start(&profile.Config{
-			CPUProfile:   true,
-			MemProfile:   false,
-			BlockProfile: false,
-		}).Stop()
+		defer profile.Start().Stop()
 	}
 
 	// Prevent CloudFlare informational log messages
