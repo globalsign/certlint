@@ -25,8 +25,10 @@ go install github.com/globalsign/certlint
 ```
 
 #### CLI: Usage
+The 'certlint' command line utility included with this package can be used to test a single certificate or a large pem container to bulk test millions of certificates. The command is used to test the linter on a large number of certificates but could use fresh up to reduce code complexity.
+
 ```
-Usage of ./certlinter:
+Usage of ./certlint:
   -bulk string
         Bulk certificates file
   -cert string
@@ -39,8 +41,12 @@ Usage of ./certlinter:
         Include certificates in report
   -issuer string
         Certificate file
+  -pprof
+        Generate pprof profile
   -report string
         Report filename (default "report.csv")
+  -revoked
+        Check if certificates are revoked
 ```
 
 ##### CLI: One certificate
