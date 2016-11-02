@@ -31,7 +31,7 @@ func (c certificate) Check(d *certdata.Data) []error {
 	var errors []error
 
 	for _, cc := range c {
-		if cc.filter != nil && cc.filter.Check(d) {
+		if cc.filter != nil && !cc.filter.Check(d) {
 			continue
 		}
 		errors = append(errors, cc.f(d)...)
