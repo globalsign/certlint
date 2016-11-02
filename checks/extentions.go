@@ -4,6 +4,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/globalsign/certlint/certdata"
@@ -47,7 +48,11 @@ func (e extentions) Check(ext pkix.Extension, d *certdata.Data) []error {
 	}
 
 	if !found {
-		errors = append(errors, fmt.Errorf("Certificate contains unkown extention (%s)", ext.Id.String()))
+		// Don't report private enterprise extensions as unknown, registered private
+		// extentions have still been checked above.
+		if !strings.HasPrefix(ext.Id.String(), "1.3.6.1.4.1.") {
+			errors = append(errors, fmt.Errorf("Certificate contains unknown extension (%s)", ext.Id.String()))
+		}
 	}
 
 	return errors
