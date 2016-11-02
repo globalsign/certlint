@@ -5,9 +5,11 @@ go:
   - 1.7
 
 install:
+  - go get golang.org/x/net/publicsuffix
+  - go get github.com/golang/groupcache/lru
+  - go get github.com/davecheney/profile
   - go get github.com/cloudflare/cfssl/log
   - go get github.com/cloudflare/cfssl/revoke
-  - go get golang.org/x/net/publicsuffix
 notifications:
   email:
     recipients:
