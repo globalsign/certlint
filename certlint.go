@@ -131,15 +131,6 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 			return result
 		}
 
-		// List for doug
-		if d.Cert.NotAfter.After(time.Date(2017, 1, 3, 0, 0, 0, 0, time.UTC)) {
-			if d.Cert.SignatureAlgorithm < 4 {
-				result.Errors = append(result.Errors, fmt.Errorf("SignatureAlgorithm %d", d.Cert.SignatureAlgorithm))
-				results <- result
-				return result
-			}
-		}
-
 		var pool *x509.CertPool
 		type issuerCache struct {
 			Trusted bool
