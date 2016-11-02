@@ -3,6 +3,7 @@ package asn1
 import (
 	"encoding/asn1"
 	"fmt"
+	"unicode"
 	//"strings"
 	"bytes"
 	"regexp"
@@ -43,26 +44,36 @@ func CheckFormat(d asn1.RawValue) []error {
 		case 16: // "SEQUENCE, SEQUENCE OF"
 		case 17: // "SET, SET OF"
 		case 18: // "NumericString"
-
+			if !isNumericString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Invalid character in NumericString '%s'", string(d.Bytes)))
+			}
 		case 19: // "PrintableString"
 			for _, b := range d.Bytes {
 				if !isPrintable(b) {
 					errors = append(errors, fmt.Errorf("Invalid character in PrintableString '%s'", string(d.Bytes)))
-					continue
 				}
+			}
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in PrintableString '%s'", string(d.Bytes)))
 			}
 		case 20: // "TeletexString, T61String"
 			errors = append(errors, fmt.Errorf("Using depricated TeletexString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in TeletexString '%s'", string(d.Bytes)))
+			}
 
 		case 21: // "VideotexString"
 			errors = append(errors, fmt.Errorf("Using depricated VideotexString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in VideotexString '%s'", string(d.Bytes)))
+			}
 
 		case 22: // "IA5String"
-			for _, b := range d.Bytes {
-				if b != '@' && !isPrintable(b) {
-					errors = append(errors, fmt.Errorf("Invalid character in IA5String '%s'", string(d.Bytes)))
-					continue
-				}
+			if !isIA5String(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Invalid character in IA5String '%s'", string(d.Bytes)))
+			}
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in IA5String '%s'", string(d.Bytes)))
 			}
 
 		case 23: // "UTCTime"
@@ -95,17 +106,29 @@ func CheckFormat(d asn1.RawValue) []error {
 
 		case 25: // "GraphicString"
 			errors = append(errors, fmt.Errorf("Using depricated GraphicString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in GraphicString '%s'", string(d.Bytes)))
+			}
 
 		case 26: // "VisibleString, ISO646String"
 		case 27: // "GeneralString"
 			errors = append(errors, fmt.Errorf("Using depricated GeneralString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in GeneralString '%s'", string(d.Bytes)))
+			}
 
 		case 28: // "UniversalString"
 			errors = append(errors, fmt.Errorf("Using depricated UniversalString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in UniversalString '%s'", string(d.Bytes)))
+			}
 
 		case 29: // "CHARACTER STRING"
 		case 30: // "BMPString"
 			errors = append(errors, fmt.Errorf("Using depricated BMPString for '%s'", string(d.Bytes)))
+			if isForbiddenString(d.Bytes) {
+				errors = append(errors, fmt.Errorf("Forbidden value in BMPString '%s'", string(d.Bytes)))
+			}
 		}
 	}
 
@@ -124,4 +147,41 @@ func isPrintable(b byte) bool {
 		b == ':' ||
 		b == '=' ||
 		b == '?'
+}
+
+// Range from: http://www.zytrax.com/tech/ia5.html
+func isIA5String(bytes []byte) bool {
+	for len(bytes) > 0 {
+		r, size := utf8.DecodeRune(bytes)
+		if r < 0 || r > 127 {
+			return false
+		}
+		bytes = bytes[size:]
+	}
+	return true
+}
+
+// 	1, 2, 3, 4, 5, 6, 7, 8, 9, 0, and SPACE
+func isNumericString(bytes []byte) bool {
+	for len(bytes) > 0 {
+		r, size := utf8.DecodeRune(bytes)
+		if !unicode.IsNumber(r) && !unicode.IsSpace(r) {
+			return false
+		}
+		bytes = bytes[size:]
+	}
+	return true
+}
+
+// The BR state that attributes MUST NOT contain metadata such as '.', '-', ' ',
+// this check implements a structure wide validation for values that indication
+// that the field is absent, incomplete, or not applicable.
+func isForbiddenString(b []byte) bool {
+	if len(b) != 1 {
+		return false
+	}
+	if b[0] == '.' || b[0] == '-' || b[0] == ' ' || b[0] == '_' {
+		return true
+	}
+	return false
 }
