@@ -2,7 +2,7 @@ package internal
 
 import "net"
 
-// checkInternalIP verifies is an IP adress in a registered internal range.
+// checkInternalIP verifies is an IP address in a registered internal range.
 // TODO: Check if we need to verify any IPv6 ranges
 // TODO: We should also check for special purpose IP ranges, we might want to do that in a specific function
 func checkInternalIP(ip net.IP) bool {

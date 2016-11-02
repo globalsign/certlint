@@ -11,7 +11,7 @@ func CheckStruct(der []byte) []error {
 	return walk(der, "")
 }
 
-// walk is a recursive call that walks over the ASN1 structured data untill no
+// walk is a recursive call that walks over the ASN1 structured data until no
 // remaining bytes are left. For each non compound is will call the ASN1 format
 // checker.
 func walk(der []byte, path string) []error {

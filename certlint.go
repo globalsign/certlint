@@ -25,7 +25,7 @@ import (
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
 
-	// Import all availible checks
+	// Import all available checks
 	_ "github.com/globalsign/certlint/checks/certificate/all"
 	_ "github.com/globalsign/certlint/checks/extensions/all"
 
@@ -240,7 +240,7 @@ func doBulk(bulk string) {
 		return
 	}
 
-	// Unfortunatly pem.Decode can't use a io.Reader but exspects a byte array
+	// Unfortunately pem.Decode can't use a io.Reader but exspects a byte array
 	// the files we want to support are to big to load in memory.
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -441,7 +441,7 @@ func downloadCert(url string) (*x509.Certificate, error) {
 		return nil, fmt.Errorf("Unexpected response '%s'", resp.Status)
 	}
 
-	// read reponse body
+	// read response body
 	derBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
