@@ -1,0 +1,15 @@
+sudo: false
+language: go
+go:
+  - 1.6
+  - 1.7
+
+install:
+  - go get github.com/cloudflare/cfssl/log
+  - go get github.com/cloudflare/cfssl/revoke
+notifications:
+  email:
+    recipients:
+    - paul.vanbrouwershaven@globalsign.com
+    on_success: never
+    on_failure: change
