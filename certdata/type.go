@@ -70,14 +70,14 @@ func (d *Data) setCertificateType() error {
 			if len(d.Cert.Subject.SerialNumber) > 0 {
 				d.Type = "EV"
 				return nil
-			} else {
-				d.Type = "OV"
-				return nil
 			}
-		} else {
-			d.Type = "DV"
+
+			d.Type = "OV"
 			return nil
 		}
+
+		d.Type = "DV"
+		return nil
 	}
 
 	if d.Type == "" {
