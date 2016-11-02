@@ -7,6 +7,7 @@ go:
 install:
   - go get github.com/cloudflare/cfssl/log
   - go get github.com/cloudflare/cfssl/revoke
+  - go get golang.org/x/net/publicsuffix
 notifications:
   email:
     recipients:
