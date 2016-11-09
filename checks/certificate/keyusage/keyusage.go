@@ -5,10 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
-	"fmt"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Key Usage Check"
@@ -23,8 +23,8 @@ func init() {
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.3
 //
 // TODO: Check if we can or need to do something with dh.PublicKey
-func Check(d *certdata.Data) []error {
-	var errors []error
+func Check(d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 	var forbidden []x509.KeyUsage
 
 	// Source
@@ -64,7 +64,8 @@ func Check(d *certdata.Data) []error {
 	// key ussages would not be allowed
 	if d.Type != "CA" {
 		if d.Cert.KeyUsage == 0 {
-			return []error{fmt.Errorf("Certificate has no key usage set")}
+			e.Err("Certificate has no key usage set")
+			return e
 		}
 
 		forbidden = append(forbidden, x509.KeyUsageCertSign)
@@ -74,9 +75,9 @@ func Check(d *certdata.Data) []error {
 	// Check if there are any forbidden key usages set
 	for _, fku := range forbidden {
 		if d.Cert.KeyUsage&fku != 0 {
-			errors = append(errors, fmt.Errorf("Certificate has key usage %s set", keyUsageString(fku)))
+			e.Err("Certificate has key usage %s set", keyUsageString(fku))
 		}
 	}
 
-	return errors
+	return e
 }

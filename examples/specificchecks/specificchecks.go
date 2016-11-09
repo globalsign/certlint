@@ -6,6 +6,7 @@ import (
 	"github.com/globalsign/certlint/asn1"
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 
 	// Check for certificate (ext) KeyUsage extension
 	_ "github.com/globalsign/certlint/checks/extensions/extkeyusage"
@@ -17,7 +18,7 @@ import (
 )
 
 func main() {
-	var errors []error
+	var e = errors.New(nil)
 
 	// Certificate with no keyusage
 	der := []byte{0x30, 0x82, 0x5, 0x9, 0x30, 0x82, 0x3, 0xf1, 0xa0, 0x3, 0x2,
@@ -120,23 +121,17 @@ func main() {
 		0xa7, 0x6c, 0x27, 0xc5, 0x9, 0xe0, 0x65, 0x3, 0x5f, 0xca, 0xc1}
 
 	// Check the ASN1 structure for common formatting errros
-	structErrors := asn1.CheckStruct(der)
-	if len(structErrors) > 0 {
-		errors = append(errors, structErrors...)
-	}
+	e.Append(asn1.CheckStruct(der))
 
 	// Load and parse certificate
 	d, err := certdata.Load(der)
 	if err == nil {
 		// Perform all and only the imported checks
-		testErrors := checks.Certificate.Check(d)
-		if len(testErrors) > 0 {
-			errors = append(errors, testErrors...)
-		}
+		e.Append(checks.Certificate.Check(d))
 	}
 
 	// List all errors
-	for _, err := range errors {
+	for _, err := range e.List() {
 		fmt.Printf("%s (%s)\n", err.Error(), d.Type)
 	}
 }

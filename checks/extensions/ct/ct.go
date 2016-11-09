@@ -3,11 +3,10 @@ package ct
 import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
-	"fmt"
 
 	"github.com/globalsign/certlint/certdata"
-
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Certificate Transparency Extension Check"
@@ -23,12 +22,12 @@ func init() {
 // https://tools.ietf.org/html/rfc6962
 //
 // TODO: Check it's present in EV certificates issued after xxx
-func Check(e pkix.Extension, d *certdata.Data) []error {
-	var errors []error
+func Check(ex pkix.Extension, d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 
-	if e.Critical {
-		errors = append(errors, fmt.Errorf("Certificate Transparency extension set critical"))
+	if ex.Critical {
+		e.Err("Certificate Transparency extension set critical")
 	}
 
-	return errors
+	return e
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/globalsign/certlint/asn1"
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 
 	// Import all available checks
 	_ "github.com/globalsign/certlint/checks/certificate/all"
@@ -42,7 +43,7 @@ type testResult struct {
 	Cert    *x509.Certificate
 	Pem     string
 	Der     []byte
-	Errors  []error
+	Errors  *errors.Errors
 }
 
 var jobs = make(chan []byte, 100)
@@ -89,9 +90,9 @@ func main() {
 	der := getCertificate(*cert)
 	result := do(nil, der, issuer, *expired, true)
 
-	if len(result.Errors) > 0 {
+	if len(result.Errors.List()) > 0 {
 		fmt.Println("Certificate Type:", result.Type)
-		for _, err := range result.Errors {
+		for _, err := range result.Errors.List() {
 			fmt.Println(err)
 		}
 	}
@@ -102,20 +103,19 @@ func main() {
 func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testResult {
 	// use a local cache to prevent that we need to wait on a local
 	var result testResult
+	result.Errors = errors.New(nil)
 
 	// Include der in results for debugging
 	result.Der = der
 
 	// This causes that we check every certificate, even expired certificates
 	structErrors := asn1.CheckStruct(der)
-	if len(structErrors) > 0 {
-		result.Errors = append(result.Errors, structErrors...)
-	}
+	result.Errors.Append(structErrors)
 
 	// Load certificate
 	d, err := certdata.Load(der)
 	if err != nil {
-		result.Errors = append(result.Errors, err)
+		result.Errors.Err(err.Error())
 	} else {
 		result.Trusted = true
 		result.Cert = d.Cert
@@ -174,12 +174,9 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 				pool = ic.Pool
 
 			} else {
-				var errors []error
-				d.Issuer, pool, errors = getIssuerPool(d.Cert)
-
-				if len(errors) > 0 {
-					result.Errors = append(result.Errors, errors...)
-				}
+				var e = errors.New(nil)
+				d.Issuer, pool, e = getIssuerPool(d.Cert)
+				result.Errors.Append(e)
 
 				// Check if this is a publicly trusted certificate
 				opts := x509.VerifyOptions{
@@ -199,7 +196,7 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 
 		if !result.Trusted {
 			fmt.Println("Failed to verify chain", d.Cert.Issuer.CommonName)
-			result.Errors = append(result.Errors, fmt.Errorf("Failed to verify chain for %s", d.Cert.Issuer.CommonName))
+			result.Errors.Err("Failed to verify chain for %s", d.Cert.Issuer.CommonName)
 			return result
 		}
 
@@ -208,14 +205,11 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 		}
 
 		// Check against errors
-		testErrors := checks.Certificate.Check(d)
-		if len(testErrors) > 0 {
-			result.Errors = append(result.Errors, testErrors...)
-		}
+		result.Errors.Append(checks.Certificate.Check(d))
 	}
 
 	// In batch mode we want to queue results
-	if !rtrn && len(result.Errors) > 0 {
+	if !rtrn && len(result.Errors.List()) > 0 {
 		results <- result
 	}
 
@@ -252,10 +246,15 @@ func doBulk(bulk string) {
 				count++
 				jobs <- block.Bytes
 			} else {
+				var e = errors.New(nil)
+				if err != nil {
+					e.Err(err.Error())
+				}
+
 				results <- testResult{
 					Cert:   nil,
 					Pem:    string(pemCert),
-					Errors: []error{err},
+					Errors: e,
 				}
 			}
 		}
@@ -294,10 +293,7 @@ func saveResults(filename string, include, revoked bool) error {
 	for {
 		r, more := <-results
 		if more {
-			for _, e := range r.Errors {
-				if e == nil {
-					continue
-				}
+			for _, e := range r.Errors.List() {
 				var columns []string
 				if r.Cert != nil {
 					columns = []string{
@@ -366,15 +362,15 @@ func getCertificate(file string) []byte {
 	return derBytes
 }
 
-func getIssuerPool(cert *x509.Certificate) (*x509.Certificate, *x509.CertPool, []error) {
-	var errors []error
+func getIssuerPool(cert *x509.Certificate) (*x509.Certificate, *x509.CertPool, *errors.Errors) {
+	var e = errors.New(nil)
 	var issuer *x509.Certificate
 
 	pool := x509.NewCertPool()
 	var i int
 	for len(cert.IssuingCertificateURL) > 0 {
-		ic, e := getIssuer(cert)
-		errors = append(errors, e...)
+		ic, err := getIssuer(cert)
+		e.Append(err)
 		if ic == nil {
 			break
 		}
@@ -392,18 +388,18 @@ func getIssuerPool(cert *x509.Certificate) (*x509.Certificate, *x509.CertPool, [
 		i++
 	}
 
-	return issuer, pool, errors
+	return issuer, pool, e
 }
 
-func getIssuer(cert *x509.Certificate) (*x509.Certificate, []error) {
-	var errors []error
+func getIssuer(cert *x509.Certificate) (*x509.Certificate, *errors.Errors) {
+	var e = errors.New(nil)
 	var issuer *x509.Certificate
 	for _, url := range cert.IssuingCertificateURL {
 		// download if not in cache
 		var err error
 		issuer, err = downloadCert(url)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("Failed to download issuer certificate from '%s': %s", url, err.Error()))
+			e.Err("Failed to download issuer certificate from '%s': %s", url, err.Error())
 		}
 		if issuer != nil {
 			break
@@ -414,11 +410,11 @@ func getIssuer(cert *x509.Certificate) (*x509.Certificate, []error) {
 	if issuer != nil {
 		err := cert.CheckSignatureFrom(issuer)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("Signature not from downloaded issuer: %s", err.Error()))
+			e.Err("Signature not from downloaded issuer: %s", err.Error())
 		}
 	}
 
-	return issuer, errors
+	return issuer, e
 }
 
 func downloadCert(url string) (*x509.Certificate, error) {

@@ -1,11 +1,11 @@
 package wildcard
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Wildcard(s) Check"
@@ -15,29 +15,29 @@ func init() {
 }
 
 // Check performs a strict verification on the extension according to the standard(s)
-func Check(d *certdata.Data) []error {
-	var errors []error
+func Check(d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 
 	switch d.Type {
 	case "EV":
 		if strings.LastIndex(d.Cert.Subject.CommonName, "*") > -1 {
-			errors = append(errors, fmt.Errorf("Certificate should not contain a wildcard"))
+			e.Err("Certificate should not contain a wildcard")
 		}
 		for _, n := range d.Cert.DNSNames {
 			if strings.LastIndex(n, "*") > -1 {
-				errors = append(errors, fmt.Errorf("Certificate subjectAltName '%s' should not contain a wildcard", n))
+				e.Err("Certificate subjectAltName '%s' should not contain a wildcard", n)
 			}
 		}
 	case "DV", "OV":
 		if strings.LastIndex(d.Cert.Subject.CommonName, "*") > 0 {
-			errors = append(errors, fmt.Errorf("Certificate wildcard is only allowed as prefix"))
+			e.Err("Certificate wildcard is only allowed as prefix")
 		}
 		for _, n := range d.Cert.DNSNames {
 			if strings.LastIndex(n, "*") > 0 {
-				errors = append(errors, fmt.Errorf("Certificate subjectAltName '%s' wildcard is only allowed as prefix", n))
+				e.Err("Certificate subjectAltName '%s' wildcard is only allowed as prefix", n)
 			}
 		}
 	}
 
-	return errors
+	return e
 }

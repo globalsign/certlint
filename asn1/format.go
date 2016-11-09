@@ -1,14 +1,14 @@
 package asn1
 
 import (
-	"encoding/asn1"
-	"fmt"
-	"unicode"
-	//"strings"
 	"bytes"
+	"encoding/asn1"
 	"regexp"
 	"time"
+	"unicode"
 	"unicode/utf8"
+
+	"github.com/globalsign/certlint/errors"
 )
 
 // RFC 5280 4.1.2.5.1: UTCTime MUST include seconds, even when 00
@@ -19,8 +19,8 @@ var formatGeneralizedTime = regexp.MustCompile("^([0-9]{4})([01][0-9])([0-3][0-9
 // encoding according to the class and tag of the raw value.
 // TODO: Create checks for remaining class 0 tags
 // TODO: Should we create extensions for other classes, even include class 0?
-func CheckFormat(d asn1.RawValue) []error {
-	var errors []error
+func CheckFormat(d asn1.RawValue) *errors.Errors {
+	var e = errors.New(nil)
 
 	if d.Class == 0 {
 		switch d.Tag {
@@ -38,101 +38,101 @@ func CheckFormat(d asn1.RawValue) []error {
 		case 11: // "EMBEDDED PDV"
 		case 12: // "UTF8String"
 			if !utf8.Valid(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Invalid UTF8 encoding in UTF8String"))
+				e.Err("Invalid UTF8 encoding in UTF8String")
 			}
 		case 13: // "RELATIVE-OID"
 		case 16: // "SEQUENCE, SEQUENCE OF"
 		case 17: // "SET, SET OF"
 		case 18: // "NumericString"
 			if !isNumericString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Invalid character in NumericString '%s'", string(d.Bytes)))
+				e.Err("Invalid character in NumericString '%s'", string(d.Bytes))
 			}
 		case 19: // "PrintableString"
 			for _, b := range d.Bytes {
 				if !isPrintable(b) {
-					errors = append(errors, fmt.Errorf("Invalid character in PrintableString '%s'", string(d.Bytes)))
+					e.Err("Invalid character in PrintableString '%s'", string(d.Bytes))
 				}
 			}
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in PrintableString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in PrintableString '%s'", string(d.Bytes))
 			}
 		case 20: // "TeletexString, T61String"
-			errors = append(errors, fmt.Errorf("Using depricated TeletexString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated TeletexString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in TeletexString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in TeletexString '%s'", string(d.Bytes))
 			}
 
 		case 21: // "VideotexString"
-			errors = append(errors, fmt.Errorf("Using depricated VideotexString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated VideotexString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in VideotexString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in VideotexString '%s'", string(d.Bytes))
 			}
 
 		case 22: // "IA5String"
 			if !isIA5String(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Invalid character in IA5String '%s'", string(d.Bytes)))
+				e.Err("Invalid character in IA5String '%s'", string(d.Bytes))
 			}
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in IA5String '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in IA5String '%s'", string(d.Bytes))
 			}
 
 		case 23: // "UTCTime"
 			// RFC 5280 4.1.2.5: times must be in Z (GMT)
 			if !bytes.HasSuffix(d.Bytes, []byte{90}) {
-				errors = append(errors, fmt.Errorf("UTCTime not in Zulu/GMT"))
+				e.Err("UTCTime not in Zulu/GMT")
 			}
 			if !formatUTCTime.Match(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Invalid UTCTime"))
+				e.Err("Invalid UTCTime")
 			}
 		case 24: // "GeneralizedTime"
 			var v time.Time
 			_, err := asn1.Unmarshal(d.FullBytes, &v)
 			if err != nil {
-				errors = append(errors, fmt.Errorf("Failed to parse Generalized Time: %s", err.Error()))
+				e.Err("Failed to parse Generalized Time: %s", err.Error())
 			}
 
 			// RFC 5280 4.1.2.5: times must be in Z (GMT)
 			if !bytes.HasSuffix(d.Bytes, []byte{90}) {
-				errors = append(errors, fmt.Errorf("Generalized Time not in Zulu/GMT"))
+				e.Err("Generalized Time not in Zulu/GMT")
 			}
 			// TODO: Can we use binary.BigEndian.Varint(d.Bytes[0:3]), for better performance?
 			if v.Year() < 2050 {
-				errors = append(errors, fmt.Errorf("Generalized Time before 2050"))
+				e.Err("Generalized Time before 2050")
 			}
 
 			if !formatGeneralizedTime.Match(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Invalid Generalized Time"))
+				e.Err("Invalid Generalized Time")
 			}
 
 		case 25: // "GraphicString"
-			errors = append(errors, fmt.Errorf("Using depricated GraphicString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated GraphicString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in GraphicString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in GraphicString '%s'", string(d.Bytes))
 			}
 
 		case 26: // "VisibleString, ISO646String"
 		case 27: // "GeneralString"
-			errors = append(errors, fmt.Errorf("Using depricated GeneralString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated GeneralString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in GeneralString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in GeneralString '%s'", string(d.Bytes))
 			}
 
 		case 28: // "UniversalString"
-			errors = append(errors, fmt.Errorf("Using depricated UniversalString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated UniversalString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in UniversalString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in UniversalString '%s'", string(d.Bytes))
 			}
 
 		case 29: // "CHARACTER STRING"
 		case 30: // "BMPString"
-			errors = append(errors, fmt.Errorf("Using depricated BMPString for '%s'", string(d.Bytes)))
+			e.Warning("Using depricated BMPString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
-				errors = append(errors, fmt.Errorf("Forbidden value in BMPString '%s'", string(d.Bytes)))
+				e.Err("Forbidden value in BMPString '%s'", string(d.Bytes))
 			}
 		}
 	}
 
-	return errors
+	return e
 }
 
 // Version of isPrintable without allowing a *

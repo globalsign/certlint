@@ -1,11 +1,11 @@
 package revocation
 
 import (
-	"fmt"
 	"net/url"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Certificate Revocation Information Check"
@@ -15,19 +15,21 @@ func init() {
 }
 
 // Check performs a strict verification on the extension according to the standard(s)
-func Check(d *certdata.Data) []error {
-	var errors []error
+func Check(d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
+
 	if len(d.Cert.CRLDistributionPoints) == 0 && len(d.Cert.OCSPServer) == 0 {
-		return []error{fmt.Errorf("Certificate contains no CRL or OCSP server")}
+		e.Err("Certificate contains no CRL or OCSP server")
+		return e
 	}
 
 	// Check CRL information
 	for _, crl := range d.Cert.CRLDistributionPoints {
 		l, err := url.Parse(crl)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("Certificate contains an invalid CRL (%s)", crl))
+			e.Err("Certificate contains an invalid CRL (%s)", crl)
 		} else if l.Scheme != "http" {
-			errors = append(errors, fmt.Errorf("Certificate contains a CRL with an non-preferred scheme (%s)", l.Scheme))
+			e.Err("Certificate contains a CRL with an non-preferred scheme (%s)", l.Scheme)
 		}
 	}
 
@@ -35,11 +37,11 @@ func Check(d *certdata.Data) []error {
 	for _, server := range d.Cert.OCSPServer {
 		s, err := url.Parse(server)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("Certificate contains an invalid OCSP server (%s)", s))
+			e.Err("Certificate contains an invalid OCSP server (%s)", s)
 		} else if s.Scheme != "http" {
-			errors = append(errors, fmt.Errorf("Certificate contains a OCSP server with an non-preferred scheme (%s)", s.Scheme))
+			e.Err("Certificate contains a OCSP server with an non-preferred scheme (%s)", s.Scheme)
 		}
 	}
 
-	return errors
+	return e
 }

@@ -19,11 +19,11 @@ func TestTestData(t *testing.T) {
 		der := getCertificate("./testdata/" + f.Name())
 		if len(der) > 0 {
 			result := do(icaCache, der, nil, true, true)
-			if len(result.Errors) == 0 {
-				t.Errorf("Exspected some errors, got %d in %s", len(result.Errors), f.Name())
+			if len(result.Errors.List()) == 0 {
+				t.Errorf("Expected some errors, got %d in %s", len(result.Errors.List()), f.Name())
 				continue
 			}
-			for _, err := range result.Errors {
+			for _, err := range result.Errors.List() {
 				fmt.Printf("%s (%s)\n", err.Error(), result.Type)
 			}
 		}

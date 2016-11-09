@@ -2,12 +2,12 @@ package nameconstraints
 
 import (
 	"encoding/asn1"
-	"fmt"
 
 	"crypto/x509/pkix"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "NameConstraints Extension Check"
@@ -19,20 +19,20 @@ func init() {
 }
 
 // Check performs a strict verification on the extension according to the standard(s)
-func Check(e pkix.Extension, d *certdata.Data) []error {
-	var errors []error
+func Check(ex pkix.Extension, d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 
 	// NameConstraints do officially need to be set critical, often they are not
 	// because many implementations still don't support Name Constraints.
 	// TODO: Only show a warning message
-	if !e.Critical {
-		errors = append(errors, fmt.Errorf("NameConstraints extension set non-critical"))
+	if !ex.Critical {
+		e.Err("NameConstraints extension set non-critical")
 	}
 
 	// NameConstraints should only be included in CA or subordinate certificates
 	if !d.Cert.IsCA {
-		errors = append(errors, fmt.Errorf("End entity certificate should not contain a NameConstraints extension"))
+		e.Err("End entity certificate should not contain a NameConstraints extension")
 	}
 
-	return errors
+	return e
 }

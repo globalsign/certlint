@@ -1,10 +1,9 @@
 package version
 
 import (
-	"fmt"
-
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Certificate Version Check"
@@ -14,9 +13,13 @@ func init() {
 }
 
 // Check performs a strict verification on the extension according to the standard(s)
-func Check(d *certdata.Data) []error {
+func Check(d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
+
 	if d.Cert.Version != 3 {
-		return []error{fmt.Errorf("Certificate is not V3 (%d)", d.Cert.Version)}
+		e.Err("Certificate is not V3 (%d)", d.Cert.Version)
+		return e
 	}
-	return []error{}
+
+	return nil
 }

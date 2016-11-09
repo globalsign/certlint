@@ -1,11 +1,11 @@
 package subjectaltname
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "Subject Alternative Names Check"
@@ -15,8 +15,8 @@ func init() {
 }
 
 // Check performs a strict verification on the extension according to the standard(s)
-func Check(d *certdata.Data) []error {
-	var errors []error
+func Check(d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 
 	switch d.Type {
 	case "PS":
@@ -25,13 +25,13 @@ func Check(d *certdata.Data) []error {
 		//}
 		for _, s := range d.Cert.EmailAddresses {
 			if strings.HasPrefix(s, " ") || strings.HasSuffix(s, " ") {
-				errors = append(errors, fmt.Errorf("Certificate subjectAltName '%s' starts or ends with a whitespace", s))
+				e.Err("Certificate subjectAltName '%s' starts or ends with a whitespace", s)
 			}
 		}
 
 	case "DV", "OV", "EV":
 		if len(d.Cert.DNSNames) == 0 && len(d.Cert.IPAddresses) == 0 {
-			errors = append(errors, fmt.Errorf("Certificate doesn't contain any subjectAltName"))
+			e.Err("Certificate doesn't contain any subjectAltName")
 		}
 
 		var cnInSan bool
@@ -40,7 +40,7 @@ func Check(d *certdata.Data) []error {
 				cnInSan = true
 			}
 			if strings.HasPrefix(s, " ") || strings.HasSuffix(s, " ") {
-				errors = append(errors, fmt.Errorf("Certificate subjectAltName '%s' starts or ends with a whitespace", s))
+				e.Err("Certificate subjectAltName '%s' starts or ends with a whitespace", s)
 			}
 		}
 
@@ -54,9 +54,9 @@ func Check(d *certdata.Data) []error {
 		}
 
 		if !cnInSan {
-			errors = append(errors, fmt.Errorf("Certificate CN is not listed in subjectAltName"))
+			e.Err("Certificate CN is not listed in subjectAltName")
 		}
 	}
 
-	return errors
+	return e
 }

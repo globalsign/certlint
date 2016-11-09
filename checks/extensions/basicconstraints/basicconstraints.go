@@ -3,11 +3,10 @@ package basicconstraints
 import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
-	"fmt"
 
 	"github.com/globalsign/certlint/certdata"
-
 	"github.com/globalsign/certlint/checks"
+	"github.com/globalsign/certlint/errors"
 )
 
 const checkName = "BasicConstraints Extension Check"
@@ -22,8 +21,8 @@ func init() {
 //
 // https://tools.ietf.org/html/rfc5280#section-4.2.1.9
 //
-func Check(e pkix.Extension, d *certdata.Data) []error {
-	var errors []error
+func Check(ex pkix.Extension, d *certdata.Data) *errors.Errors {
+	var e = errors.New(nil)
 
 	// This extension MAY appear as a critical or non-critical extension in end
 	// entity certificates.
@@ -42,10 +41,10 @@ func Check(e pkix.Extension, d *certdata.Data) []error {
 		//
 		// The CA Browser Forum BR 1.4.1 state that it should always be true for
 		// CA certificates.
-		if !e.Critical {
-			errors = append(errors, fmt.Errorf("BasicConstraints extension must be critical in CA certificates"))
+		if !ex.Critical {
+			e.Err("BasicConstraints extension must be critical in CA certificates")
 		}
 	}
 
-	return errors
+	return e
 }
