@@ -12,6 +12,7 @@ import (
 	_ "github.com/globalsign/certlint/checks/certificate/publickey"
 	_ "github.com/globalsign/certlint/checks/certificate/publicsuffix"
 	_ "github.com/globalsign/certlint/checks/certificate/revocation"
+	_ "github.com/globalsign/certlint/checks/certificate/serialnumber"
 	_ "github.com/globalsign/certlint/checks/certificate/signaturealgorithm"
 	_ "github.com/globalsign/certlint/checks/certificate/subject"
 	_ "github.com/globalsign/certlint/checks/certificate/subjectaltname"
