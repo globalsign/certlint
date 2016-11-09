@@ -10,6 +10,7 @@ install:
   - go get github.com/pkg/profile
   - go get github.com/cloudflare/cfssl/log
   - go get github.com/cloudflare/cfssl/revoke
+  - go get github.com/google/certificate-transparency/go
 notifications:
   email:
     recipients:
