@@ -92,9 +92,9 @@ _ "github.com/globalsign/certlint/checks/certificate/keyusage"
 
 ##### API: Check ASN.1 value formatting
 ```go
-errors := asn1.CheckStruct(der)
-if len(errors) > 0 {
-  for _, err := range errors {
+e := asn1.CheckStruct(der)
+if len(e.List()) > 0 {
+  for _, err := range e.List() {
     fmt.Println(err)
   }
 }
@@ -104,9 +104,9 @@ if len(errors) > 0 {
 ```go
 d, err := certdata.Load(der)
 if err == nil {
-  errors := checks.Certificate.Check(d)
-  if len(errors) > 0 {
-    for _, err := range errors {
+  e := checks.Certificate.Check(d)
+  if len(e.List()) > 0 {
+    for _, err := range e.List() {
       fmt.Println(err)
     }
   }
