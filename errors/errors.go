@@ -141,7 +141,7 @@ func (e *Errors) Debug(format string, a ...interface{}) error {
 	return e.add(Debug, format, a)
 }
 
-func (e *Errors) add(p Priority, format string, a ...interface{}) error {
+func (e *Errors) add(p Priority, format string, a []interface{}) error {
 	// no error in request
 	if len(format) == 0 && len(a) == 0 {
 		return nil
@@ -149,10 +149,15 @@ func (e *Errors) add(p Priority, format string, a ...interface{}) error {
 
 	e.m.Lock()
 
+	msg := format
+	if len(a) > 0 {
+		msg = fmt.Sprintf(format, a)
+	}
+
 	// add this priority to the end of the list
 	e.err = append(e.err, Err{
 		p:   p,
-		msg: fmt.Sprintf(format, a...),
+		msg: msg,
 	})
 
 	// set highest priority in this list
