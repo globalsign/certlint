@@ -22,7 +22,7 @@ func main() {
 	var start = flag.Int64("start", 0, "CT log start index")
 	flag.Parse()
 
-	logClient := client.New(*logServer, nil)
+	logClient := client.New(*logServer, nil, nil)
 	sth, err := logClient.GetSTH()
 	if err != nil {
 		fmt.Printf("Failed to get tree head: %s\n", err.Error())
