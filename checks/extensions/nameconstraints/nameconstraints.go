@@ -24,9 +24,8 @@ func Check(ex pkix.Extension, d *certdata.Data) *errors.Errors {
 
 	// NameConstraints do officially need to be set critical, often they are not
 	// because many implementations still don't support Name Constraints.
-	// TODO: Only show a warning message
 	if !ex.Critical {
-		e.Err("NameConstraints extension set non-critical")
+		e.Warning("NameConstraints extension set non-critical")
 	}
 
 	// NameConstraints should only be included in CA or subordinate certificates
