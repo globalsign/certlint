@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"time"
@@ -23,8 +24,12 @@ func main() {
 	var start = flag.Int64("start", 0, "CT log start index")
 	flag.Parse()
 
-	logClient := client.New(*logServer, nil, jsonclient.Options{})
-	sth, err := logClient.GetSTH()
+	logClient, err := client.New(*logServer, nil, jsonclient.Options{})
+	if err != nil {
+		fmt.Printf("Failed to create log client: %s\n", err.Error())
+		return
+	}
+	sth, err := logClient.GetSTH(context.Background())
 	if err != nil {
 		fmt.Printf("Failed to get tree head: %s\n", err.Error())
 		return
