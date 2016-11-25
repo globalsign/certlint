@@ -15,6 +15,7 @@ import (
 
 	ct "github.com/google/certificate-transparency/go"
 	"github.com/google/certificate-transparency/go/client"
+	"github.com/google/certificate-transparency/go/jsonclient"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	var start = flag.Int64("start", 0, "CT log start index")
 	flag.Parse()
 
-	logClient := client.New(*logServer, nil, nil)
+	logClient := client.New(*logServer, nil, jsonclient.Options{})
 	sth, err := logClient.GetSTH()
 	if err != nil {
 		fmt.Printf("Failed to get tree head: %s\n", err.Error())
