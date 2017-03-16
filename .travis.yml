@@ -1,15 +1,19 @@
 sudo: false
 language: go
 go:
-  - 1.6
+  - 1.8
   - 1.7
+  - master
 
-install:
-  - go get golang.org/x/net/publicsuffix
-  - go get github.com/golang/groupcache/lru
-  - go get github.com/pkg/profile
-  - go get github.com/cloudflare/cfssl/log
-  - go get github.com/cloudflare/cfssl/revoke
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
 notifications:
   email:
     recipients:
