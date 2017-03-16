@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 	ct "github.com/google/certificate-transparency/go"
 	"github.com/google/certificate-transparency/go/client"
+	"github.com/google/certificate-transparency/go/jsonclient"
 )
 
 func main() {
@@ -22,8 +24,12 @@ func main() {
 	var start = flag.Int64("start", 0, "CT log start index")
 	flag.Parse()
 
-	logClient := client.New(*logServer, nil)
-	sth, err := logClient.GetSTH()
+	logClient, err := client.New(*logServer, nil, jsonclient.Options{})
+	if err != nil {
+		fmt.Printf("Failed to create log client: %s\n", err.Error())
+		return
+	}
+	sth, err := logClient.GetSTH(context.Background())
 	if err != nil {
 		fmt.Printf("Failed to get tree head: %s\n", err.Error())
 		return
@@ -31,7 +37,7 @@ func main() {
 
 	var startIndex = *start
 	for {
-		entries, err := logClient.GetEntries(startIndex, startIndex+1000)
+		entries, err := logClient.GetEntries(context.Background(), startIndex, startIndex+1000)
 		if err != nil {
 			fmt.Printf("Failed to get entries: %s\n", err.Error())
 			break
@@ -56,11 +62,13 @@ func ctEntry(entry ct.LogEntry) {
 			fmt.Printf("Failed to get leaf certificate in entry %d: %s\n", entry.Index, err.Error())
 			return
 		}
-		check(leaf.Raw)
+		if leaf != nil {
+			check(leaf.Raw)
+		}
 		return
 
 	case ct.PrecertLogEntryType:
-		check(entry.Chain[0])
+		check(entry.Chain[0].Data)
 		return
 
 	default:
@@ -86,12 +94,17 @@ func check(der []byte) {
 		// Perform all and only the imported checks
 		e.Append(checks.Certificate.Check(d))
 	}
+	if d == nil {
+		e.Err("Failed to load certificate")
+	}
 
 	// List all errors
 	if len(e.List()) > 0 {
-		fmt.Printf("'%s' issued by '%s'\n", d.Cert.Subject.CommonName, d.Cert.Issuer.CommonName)
+		if d != nil {
+			fmt.Printf("'%s' issued by '%s' (%s)\n", d.Cert.Subject.CommonName, d.Cert.Issuer.CommonName, d.Type)
+		}
 		for _, err := range e.List() {
-			fmt.Printf("\t- %s (%s)\n", err.Error(), d.Type)
+			fmt.Printf("\t- %s\n", err.Error())
 		}
 		fmt.Println()
 	}
