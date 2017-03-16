@@ -4,13 +4,15 @@ go:
   - 1.7
   - master
 
-install:
-  - go get golang.org/x/net/publicsuffix
-  - go get github.com/golang/groupcache/lru
-  - go get github.com/pkg/profile
-  - go get github.com/cloudflare/cfssl/log
-  - go get github.com/cloudflare/cfssl/revoke
-  - go get github.com/google/certificate-transparency/go
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
 notifications:
   email:
     recipients:
