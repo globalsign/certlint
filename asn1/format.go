@@ -40,6 +40,12 @@ func CheckFormat(d asn1.RawValue) *errors.Errors {
 			if !utf8.Valid(d.Bytes) {
 				e.Err("Invalid UTF8 encoding in UTF8String")
 			}
+			if isForbiddenString(d.Bytes) {
+				e.Err("Forbidden value in UTF8String '%s'", string(d.Bytes))
+			}
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in UTF8String '%s'", string(d.Bytes))
+			}
 		case 13: // "RELATIVE-OID"
 		case 16: // "SEQUENCE, SEQUENCE OF"
 		case 17: // "SET, SET OF"
@@ -61,13 +67,17 @@ func CheckFormat(d asn1.RawValue) *errors.Errors {
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in TeletexString '%s'", string(d.Bytes))
 			}
-
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in TeletexString '%s'", string(d.Bytes))
+			}
 		case 21: // "VideotexString"
 			e.Warning("Using depricated VideotexString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in VideotexString '%s'", string(d.Bytes))
 			}
-
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in VideotexString '%s'", string(d.Bytes))
+			}
 		case 22: // "IA5String"
 			if !isIA5String(d.Bytes) {
 				e.Err("Invalid character in IA5String '%s'", string(d.Bytes))
@@ -109,25 +119,34 @@ func CheckFormat(d asn1.RawValue) *errors.Errors {
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in GraphicString '%s'", string(d.Bytes))
 			}
-
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in GraphicString '%s'", string(d.Bytes))
+			}
 		case 26: // "VisibleString, ISO646String"
 		case 27: // "GeneralString"
 			e.Warning("Using depricated GeneralString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in GeneralString '%s'", string(d.Bytes))
 			}
-
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in GeneralString '%s'", string(d.Bytes))
+			}
 		case 28: // "UniversalString"
 			e.Warning("Using depricated UniversalString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in UniversalString '%s'", string(d.Bytes))
 			}
-
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in UniversalString '%s'", string(d.Bytes))
+			}
 		case 29: // "CHARACTER STRING"
 		case 30: // "BMPString"
 			e.Warning("Using depricated BMPString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				e.Err("Forbidden value in BMPString '%s'", string(d.Bytes))
+			}
+			if isControlCharacter(d.Bytes) {
+				e.Err("Control character in BMPString '%s'", string(d.Bytes))
 			}
 		}
 	}
@@ -150,25 +169,25 @@ func isPrintable(b byte) bool {
 }
 
 // Range from: http://www.zytrax.com/tech/ia5.html
-func isIA5String(bytes []byte) bool {
-	for len(bytes) > 0 {
-		r, size := utf8.DecodeRune(bytes)
+func isIA5String(b []byte) bool {
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
 		if r < 0 || r > 127 {
 			return false
 		}
-		bytes = bytes[size:]
+		b = b[size:]
 	}
 	return true
 }
 
 // 	1, 2, 3, 4, 5, 6, 7, 8, 9, 0, and SPACE
-func isNumericString(bytes []byte) bool {
-	for len(bytes) > 0 {
-		r, size := utf8.DecodeRune(bytes)
+func isNumericString(b []byte) bool {
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
 		if !unicode.IsNumber(r) && !unicode.IsSpace(r) {
 			return false
 		}
-		bytes = bytes[size:]
+		b = b[size:]
 	}
 	return true
 }
@@ -182,6 +201,18 @@ func isForbiddenString(b []byte) bool {
 	}
 	if b[0] == '.' || b[0] == '-' || b[0] == ' ' || b[0] == '_' {
 		return true
+	}
+	return false
+}
+
+// isControlCharacter checks if Control characters are included in the given bytes
+func isControlCharacter(b []byte) bool {
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
+		if unicode.IsControl(r) || unicode.Is(unicode.C, r) {
+			return true
+		}
+		b = b[size:]
 	}
 	return false
 }
