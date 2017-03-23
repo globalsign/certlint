@@ -81,7 +81,8 @@ func check(der []byte) {
 	var e = errors.New(nil)
 
 	// Check the ASN1 structure for common formatting errros
-	e.Append(asn1.CheckStruct(der))
+	al := new(asn1.Linter)
+	e.Append(al.CheckStruct(der))
 
 	// Load and parse certificate
 	d, err := certdata.Load(der)

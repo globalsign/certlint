@@ -121,7 +121,8 @@ func main() {
 		0xa7, 0x6c, 0x27, 0xc5, 0x9, 0xe0, 0x65, 0x3, 0x5f, 0xca, 0xc1}
 
 	// Check the ASN1 structure for common formatting errros
-	e.Append(asn1.CheckStruct(der))
+	al := new(asn1.Linter)
+	e.Append(al.CheckStruct(der))
 
 	// Load and parse certificate
 	d, err := certdata.Load(der)
