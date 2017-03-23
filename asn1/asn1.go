@@ -2,45 +2,47 @@ package asn1
 
 import (
 	"encoding/asn1"
-	"fmt"
 
 	"github.com/globalsign/certlint/errors"
 )
 
+type Linter struct {
+	e errors.Errors
+}
+
 // CheckStruct returns a list of errors based on strict checks on the raw ASN1
 // encoding of the input der.
-func CheckStruct(der []byte) *errors.Errors {
-	return walk(der, "")
+func (l Linter) CheckStruct(der []byte) *errors.Errors {
+	l.walk(der)
+	if l.e.IsError() {
+		return &l.e
+	}
+	return nil
 }
 
 // walk is a recursive call that walks over the ASN1 structured data until no
 // remaining bytes are left. For each non compound is will call the ASN1 format
 // checker.
-func walk(der []byte, path string) *errors.Errors {
-	var e = errors.New(nil)
+func (l Linter) walk(der []byte) {
 	var err error
-	var sequence int
+	var d asn1.RawValue
 
 	for len(der) > 0 {
-		sequence++
-		d := asn1.RawValue{}
 		der, err = asn1.Unmarshal(der, &d)
 		if err != nil {
 			// Errors should be included in the report, but allow format checking when
 			// data has been decoded.
-			e.Err(err.Error())
+			l.e.Err(err.Error())
 			if len(d.Bytes) == 0 {
-				return e
+				return
 			}
 		}
 
 		// A compound is an ASN.1 container that contains other structs.
 		if d.IsCompound {
-			e.Append(walk(d.Bytes, fmt.Sprintf("%s.%d", path, sequence)))
+			l.walk(d.Bytes)
 		} else {
-			e.Append(CheckFormat(d))
+			l.CheckFormat(d)
 		}
 	}
-
-	return e
 }

@@ -68,16 +68,34 @@ func TestTestData(t *testing.T) {
 	}
 }
 
-func BenchmarkASN1(b *testing.B) {
+func BenchmarkTestData(b *testing.B) {
+	var icaCache = lru.New(200)
+
+	// TODO: Check for specific errors per certificate to be sure we don't miss one
+	files, _ := ioutil.ReadDir("./testdata")
+	for _, f := range files {
+		der := getCertificate("./testdata/" + f.Name())
+		if len(der) > 0 {
+			b.Run(f.Name(), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					do(icaCache, der, nil, true, true)
+				}
+			})
+		}
+	}
+}
+
+func BenchmarkASN1Good(b *testing.B) {
 	block, _ := pem.Decode([]byte(certBench))
 
 	// run asn1 formatting checks b.N times
 	for n := 0; n < b.N; n++ {
-		asn1.CheckStruct(block.Bytes)
+		al := new(asn1.Linter)
+		al.CheckStruct(block.Bytes)
 	}
 }
 
-func BenchmarkCert(b *testing.B) {
+func BenchmarkCertGood(b *testing.B) {
 	block, _ := pem.Decode([]byte(certBench))
 	d, _ := certdata.Load(block.Bytes)
 

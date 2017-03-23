@@ -58,7 +58,7 @@ func main() {
 	var report = flag.String("report", "report.csv", "Report filename")
 	var include = flag.Bool("include", false, "Include certificates in report")
 	var revoked = flag.Bool("revoked", false, "Check if certificates are revoked")
-	var pprof = flag.Bool("pprof", false, "Generate pprof profile")
+	var pprof = flag.String("pprof", "", "Generate pprof profile (cpu,mem,trace)")
 	var help = flag.Bool("help", false, "Show this help")
 
 	flag.Parse()
@@ -68,8 +68,16 @@ func main() {
 		return
 	}
 
-	if *pprof {
-		defer profile.Start().Stop()
+	// Is any profiling requested?
+	switch *pprof {
+	case "cpu":
+		defer profile.Start(profile.CPUProfile).Stop()
+	case "mem":
+		defer profile.Start(profile.MemProfile).Stop()
+	case "trace":
+		defer profile.Start(profile.TraceProfile).Stop()
+	default:
+		// pprof disabled
 	}
 
 	// Prevent CloudFlare informational log messages
@@ -109,8 +117,8 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 	result.Der = der
 
 	// This causes that we check every certificate, even expired certificates
-	structErrors := asn1.CheckStruct(der)
-	result.Errors.Append(structErrors)
+	al := new(asn1.Linter)
+	result.Errors.Append(al.CheckStruct(der))
 
 	// Load certificate
 	d, err := certdata.Load(der)
@@ -195,7 +203,6 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 		}
 
 		if !result.Trusted {
-			fmt.Println("Failed to verify chain", d.Cert.Issuer.CommonName)
 			result.Errors.Err("Failed to verify chain for %s", d.Cert.Issuer.CommonName)
 			return result
 		}
