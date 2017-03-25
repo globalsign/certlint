@@ -2,6 +2,7 @@ package subject
 
 import (
 	"crypto/x509/pkix"
+	"encoding/asn1"
 
 	"github.com/globalsign/certlint/certdata"
 	"github.com/globalsign/certlint/checks"
@@ -26,130 +27,124 @@ func Check(d *certdata.Data) *errors.Errors {
 func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 	var e = errors.New(nil)
 
-	// Using a map to check if attributes are set
-	var attr = make(map[string]bool, len(dn))
-	for _, n := range dn {
-		attr[n.Type.String()] = true
-	}
-
 	// OV & EV requirements
 	if vetting == "OV" || vetting == "EV" {
-		if !inMap(attr, organizationName) {
+		if !inDN(dn, organizationName) {
 			e.Err("organizationName is required for %s certificates", vetting)
 		}
 	}
 
 	// EV specific requirements
 	if vetting == "EV" {
-		if !inMap(attr, localityName) {
+		if !inDN(dn, localityName) {
 			e.Err("localityName is required for %s certificates", vetting)
 		}
-		if !inMap(attr, businessCategory) {
+		if !inDN(dn, businessCategory) {
 			e.Err("businessCategory is required for %s certificates", vetting)
 		}
-		if !inMap(attr, jurisdictionCountryName) {
+		if !inDN(dn, jurisdictionCountryName) {
 			e.Err("jurisdictionCountryName is required for %s certificates", vetting)
 		}
-		if !inMap(attr, serialNumber) {
+		if !inDN(dn, serialNumber) {
 			e.Err("serialNumber is required for %s certificates", vetting)
 		}
 	}
 
 	// Field related requirements
 	for _, n := range dn {
-		switch n.Type.String() {
+		switch {
 
 		// commonName
 		// If present, this field MUST contain a single IP address or Fully‐Qualified Domain Name
-		case commonName:
-			// TODO: Apply a warning via a custom error package
-			//e.Err("commonName field is deprecated")
+		case n.Type.Equal(commonName):
+			// TODO: Enable once you can simply ignore warnings
+			//e.Warning("commonName field is deprecated")
 
 		// surname
 		// A Certificate containing a givenName field or surname field MUST contain
 		// the (2.23.140.1.2.3) Certificate Policy OID.
-		case surname:
+		case n.Type.Equal(surname):
 			// Prohibited
-			if !inMap(attr, givenName) {
+			if !inDN(dn, givenName) {
 				e.Err("surname may only set in combination with givenName")
 			}
 			// Require field if surname is set
-			if !inMap(attr, localityName) && !inMap(attr, stateOrProvinceName) {
+			if !inDN(dn, localityName) && !inDN(dn, stateOrProvinceName) {
 				e.Err("localityName or stateOrProvinceName is required if surname is set")
 			}
 
 		// countryName
-		case countryName:
+		case n.Type.Equal(countryName):
 			// TODO: Check against the values in ISO 3166‐1
 			if len(n.Value.(string)) != 2 {
 				e.Err("countryName MUST contain the two-letter ISO 3166-1 country code")
 			}
 
 			// jurisdictionCountryName
-		case jurisdictionCountryName:
+		case n.Type.Equal(jurisdictionCountryName):
 			// TODO: Check against the values in ISO 3166‐1
 			if len(n.Value.(string)) != 2 {
 				e.Err("jurisdictionCountryName MUST contain the two-letter ISO 3166-1 country code")
 			}
 
 		// localityName
-		case localityName:
+		case n.Type.Equal(localityName):
 			// Prohibited
-			if !inMap(attr, organizationName) && !(inMap(attr, givenName) && inMap(attr, surname)) {
+			if !inDN(dn, organizationName) && !(inDN(dn, givenName) && inDN(dn, surname)) {
 				e.Err("localityName is not allowed without organizationName or givenName and surname")
 			}
 
 		// stateOrProvinceName
-		case stateOrProvinceName:
+		case n.Type.Equal(stateOrProvinceName):
 			// Prohibited
-			if !inMap(attr, organizationName) && !(inMap(attr, givenName) && inMap(attr, surname)) {
+			if !inDN(dn, organizationName) && !(inDN(dn, givenName) && inDN(dn, surname)) {
 				e.Err("stateOrProvinceName is not allowed without organizationName or givenName and surname")
 			}
 
 		// streetAddress
-		case streetAddress:
+		case n.Type.Equal(streetAddress):
 			// Prohibited
-			if !inMap(attr, organizationName) && !(inMap(attr, givenName) && inMap(attr, surname)) {
+			if !inDN(dn, organizationName) && !(inDN(dn, givenName) && inDN(dn, surname)) {
 				e.Err("streetAddress is not allowed without organizationName or givenName and surname")
 			}
 
 		// postalCode
-		case postalCode:
+		case n.Type.Equal(postalCode):
 			// Prohibited
-			if !inMap(attr, organizationName) && !(inMap(attr, givenName) && inMap(attr, surname)) {
+			if !inDN(dn, organizationName) && !(inDN(dn, givenName) && inDN(dn, surname)) {
 				e.Err("postalCode is not allowed without organizationName or givenName and surname")
 			}
 
 		// organizationName
-		case organizationName:
+		case n.Type.Equal(organizationName):
 			// Require field if organizationName is set
-			if !inMap(attr, localityName) && !inMap(attr, stateOrProvinceName) {
+			if !inDN(dn, localityName) && !inDN(dn, stateOrProvinceName) {
 				e.Err("localityName or stateOrProvinceName is required if organizationName is set")
 			}
-			if !inMap(attr, stateOrProvinceName) {
+			if !inDN(dn, stateOrProvinceName) {
 				e.Err("stateOrProvinceName is required if organizationName is set")
 			}
-			if !inMap(attr, countryName) {
+			if !inDN(dn, countryName) {
 				e.Err("countryName is required if organizationName is set")
 			}
 
 		// organizationalUnitName
-		case organizationalUnitName:
+		case n.Type.Equal(organizationalUnitName):
 
 		// businessCategory
-		case businessCategory:
+		case n.Type.Equal(businessCategory):
 			bc := n.Value.(string)
 			if bc != "Private Organization" && bc != "Government Entity" && bc != "Business Entity" && bc != "Non-Commercial Entity" {
 				e.Err("businessCategory should contain 'Private Organization', 'Government Entity', 'Business Entity', or 'Non-Commercial Entity'")
 			}
 
 		// serialNumber
-		case serialNumber:
+		case n.Type.Equal(serialNumber):
 
 		// givenName
-		case givenName:
+		case n.Type.Equal(givenName):
 			// Prohibited
-			if !inMap(attr, surname) {
+			if !inDN(dn, surname) {
 				e.Err("givenName may only set in combination with surname")
 			}
 		}
@@ -158,9 +153,11 @@ func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 	return e
 }
 
-func inMap(m map[string]bool, k string) bool {
-	if _, ok := m[k]; ok {
-		return true
+func inDN(dn []pkix.AttributeTypeAndValue, attr asn1.ObjectIdentifier) bool {
+	for _, n := range dn {
+		if n.Type.Equal(attr) {
+			return true
+		}
 	}
 	return false
 }

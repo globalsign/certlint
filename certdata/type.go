@@ -2,6 +2,7 @@ package certdata
 
 import (
 	"crypto/x509"
+	"encoding/asn1"
 	"fmt"
 	"strings"
 
@@ -16,12 +17,7 @@ func (d *Data) setCertificateType() error {
 		switch ku {
 		case x509.ExtKeyUsageServerAuth:
 			// Try to determine certificate type via policy oid
-			for _, poid := range d.Cert.PolicyIdentifiers {
-				if val, ok := polOidType[poid.String()]; ok {
-					d.Type = val
-					break
-				}
-			}
+			d.Type = getType(d.Cert.PolicyIdentifiers)
 		case x509.ExtKeyUsageEmailProtection:
 			d.Type = "PS"
 		case x509.ExtKeyUsageCodeSigning:
@@ -34,11 +30,8 @@ func (d *Data) setCertificateType() error {
 	}
 
 	// If we have no kown key usage, try the policy list again
-	for _, poid := range d.Cert.PolicyIdentifiers {
-		if val, ok := polOidType[poid.String()]; ok {
-			d.Type = val
-			break
-		}
+	if d.Type == "" {
+		d.Type = getType(d.Cert.PolicyIdentifiers)
 	}
 
 	// When determined by Policy Identifier we can stop
@@ -48,8 +41,8 @@ func (d *Data) setCertificateType() error {
 
 	// Check if the e-mailAddress is set in the DN
 	for _, n := range d.Cert.Subject.Names {
-		switch n.Type.String() {
-		case "1.2.840.113549.1.9.1": // e-mailAddress
+		switch {
+		case n.Type.Equal(asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}): // e-mailAddress
 			d.Type = "PS"
 			return nil
 		}
