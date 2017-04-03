@@ -11,16 +11,6 @@ type oidType struct {
 	Type             string
 }
 
-/*
-func getType(oid asn1.ObjectIdentifier) string {
-	for _, oidt := range polOidType {
-		if oid.Equal(oidt.ObjectIdentifier) {
-			return oidt.Type
-		}
-	}
-	return ""
-}*/
-
 func getType(oid []asn1.ObjectIdentifier) string {
 	for _, poid := range oid {
 		for _, oidt := range polOidType {
