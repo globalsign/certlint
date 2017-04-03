@@ -95,7 +95,7 @@ _ "github.com/globalsign/certlint/checks/certificate/keyusage"
 ```go
 al := new(asn1.Linter)
 e := al.CheckStruct(der)
-if len(e.List()) > 0 {
+if e != nil {
   for _, err := range e.List() {
     fmt.Println(err)
   }
@@ -107,7 +107,7 @@ if len(e.List()) > 0 {
 d, err := certdata.Load(der)
 if err == nil {
   e := checks.Certificate.Check(d)
-  if len(e.List()) > 0 {
+  if e != nil {
     for _, err := range e.List() {
       fmt.Println(err)
     }
