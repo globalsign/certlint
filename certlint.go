@@ -98,8 +98,8 @@ func main() {
 	der := getCertificate(*cert)
 	result := do(nil, der, issuer, *expired, true)
 
-	if len(result.Errors.List()) > 0 {
-		fmt.Println("Certificate Type:", result.Type)
+	fmt.Println("Certificate Type:", result.Type)
+	if result.Errors != nil {
 		for _, err := range result.Errors.List() {
 			fmt.Println(err)
 		}
@@ -196,7 +196,7 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 				}
 
 				// Save pool in cache
-				if pool != nil {
+				if pool != nil && icaCache != nil {
 					icaCache.Add(key, issuerCache{result.Trusted, d.Issuer, pool})
 				}
 			}

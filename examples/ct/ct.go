@@ -100,7 +100,7 @@ func check(der []byte) {
 	}
 
 	// List all errors
-	if len(e.List()) > 0 {
+	if e != nil {
 		if d != nil {
 			fmt.Printf("'%s' issued by '%s' (%s)\n", d.Cert.Subject.CommonName, d.Cert.Issuer.CommonName, d.Type)
 		}
