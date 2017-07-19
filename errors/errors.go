@@ -12,14 +12,15 @@ type Priority int
 
 // Priorities that can be used to create and list errors
 const (
-	Emergency Priority = iota
-	Alert
-	Critical
-	Error
-	Warning
-	Notice
-	Info
+	Unknown Priority = iota
 	Debug
+	Info
+	Notice
+	Warning
+	Error
+	Critical
+	Alert
+	Emergency
 )
 
 // Config defines the error configuration, currently no configuration options
@@ -168,7 +169,7 @@ func (e *Errors) add(p Priority, format string, a []interface{}) error {
 	})
 
 	// set highest priority in this list
-	if e.p < p {
+	if p > e.p {
 		e.p = p
 	}
 

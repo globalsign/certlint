@@ -4,9 +4,9 @@ package errors
 
 import "fmt"
 
-const _Priority_name = "EmergencyAlertCriticalErrorWarningNoticeInfoDebug"
+const _Priority_name = "UnknownDebugInfoNoticeWarningErrorCriticalAlertEmergency"
 
-var _Priority_index = [...]uint8{0, 9, 14, 22, 27, 34, 40, 44, 49}
+var _Priority_index = [...]uint8{0, 7, 12, 16, 22, 29, 34, 42, 47, 56}
 
 func (i Priority) String() string {
 	if i < 0 || i >= Priority(len(_Priority_index)-1) {
