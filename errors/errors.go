@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+//go:generate stringer -type=Priority
+
 // Priority defines how an error should be threaded
 type Priority int
 
@@ -60,6 +62,11 @@ func (e *Errors) IsError() bool {
 		return true
 	}
 	return false
+}
+
+// Priority returns the priority of this error
+func (e *Errors) Priority() Priority {
+	return e.p
 }
 
 // List returns all errors of a given priority, if no priority is given all
