@@ -14,9 +14,9 @@ import (
 	_ "github.com/globalsign/certlint/checks/certificate/all"
 	_ "github.com/globalsign/certlint/checks/extensions/all"
 
-	ct "github.com/google/certificate-transparency/go"
-	"github.com/google/certificate-transparency/go/client"
-	"github.com/google/certificate-transparency/go/jsonclient"
+	ct "github.com/google/certificate-transparency-go"
+	"github.com/google/certificate-transparency-go/client"
+	"github.com/google/certificate-transparency-go/jsonclient"
 )
 
 func main() {
