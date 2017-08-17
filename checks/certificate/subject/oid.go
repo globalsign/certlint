@@ -61,6 +61,8 @@ var (
 	attributeCertificate        = asn1.ObjectIdentifier{2, 5, 4, 58}
 	pseudonym                   = asn1.ObjectIdentifier{2, 5, 4, 65}
 
+	emailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
+
 	jurisdictionLocalityName        = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 1}
 	jurisdictionStateOrProvinceName = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 2}
 	jurisdictionCountryName         = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 3}
