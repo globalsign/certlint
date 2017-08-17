@@ -191,7 +191,7 @@ func isNumericString(b []byte) bool {
 // that the field is absent, incomplete, or not applicable.
 //
 // ASCII range of forbidden metadata characters are 32 - 47, 58 -64, 91 - 96,
-// 123 - 127, if the value does only contain metadata this value is forbidden.
+// 123 - 126, if the value does only contain metadata this value is forbidden.
 // This check does also detect double characters or any combination of metadata
 // characters.
 func isForbiddenString(b []byte) bool {
