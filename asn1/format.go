@@ -17,7 +17,7 @@ var formatGeneralizedTime = regexp.MustCompile("^([0-9]{4})([01][0-9])([0-3][0-9
 // encoding according to the class and tag of the raw value.
 // TODO: Create checks for remaining class 0 tags
 // TODO: Should we create extensions for other classes, even include class 0?
-func (l Linter) CheckFormat(d asn1.RawValue) {
+func (l *Linter) CheckFormat(d asn1.RawValue) {
 	if d.Class == 0 {
 		switch d.Tag {
 		case 0: // "reserved for BER"
@@ -189,14 +189,29 @@ func isNumericString(b []byte) bool {
 // The BR state that attributes MUST NOT contain metadata such as '.', '-', ' ',
 // this check implements a structure wide validation for values that indication
 // that the field is absent, incomplete, or not applicable.
+//
+// ASCII range of forbidden metadata characters are 32 - 47, 58 -64, 91 - 69,
+// 123 - 127, if the value does only contain metadata this value is forbidden.
+// This check does also detect double characters or any combination of metadata
+// characters.
 func isForbiddenString(b []byte) bool {
-	if len(b) != 1 {
+	for len(b) == 0 {
 		return false
 	}
-	if b[0] == '.' || b[0] == '-' || b[0] == ' ' || b[0] == '_' {
-		return true
+
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
+		if !((r >= 32 && r <= 47) ||
+			(r >= 58 && r <= 64) ||
+			(r >= 91 && r <= 96) ||
+			(r >= 123 && r <= 126)) {
+			// non metadata character inlcuded in value
+			return false
+		}
+		b = b[size:]
 	}
-	return false
+
+	return true
 }
 
 // isControlCharacter checks if Control characters are included in the given bytes

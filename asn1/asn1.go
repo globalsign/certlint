@@ -12,7 +12,7 @@ type Linter struct {
 
 // CheckStruct returns a list of errors based on strict checks on the raw ASN1
 // encoding of the input der.
-func (l Linter) CheckStruct(der []byte) *errors.Errors {
+func (l *Linter) CheckStruct(der []byte) *errors.Errors {
 	l.walk(der)
 	if l.e.IsError() {
 		return &l.e
@@ -23,7 +23,7 @@ func (l Linter) CheckStruct(der []byte) *errors.Errors {
 // walk is a recursive call that walks over the ASN1 structured data until no
 // remaining bytes are left. For each non compound is will call the ASN1 format
 // checker.
-func (l Linter) walk(der []byte) {
+func (l *Linter) walk(der []byte) {
 	var err error
 	var d asn1.RawValue
 
