@@ -22,10 +22,9 @@ func TestPublicSuffix(t *testing.T) {
 
 	e := Check(cd)
 	if len(e.List()) != 6 {
+		for _, err := range e.List() {
+			fmt.Println(err)
+		}
 		t.Errorf("Expected 6 errors, got %d", len(e.List()))
-	}
-
-	for _, err := range e.List() {
-		fmt.Println(err)
 	}
 }
