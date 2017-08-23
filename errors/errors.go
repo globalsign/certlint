@@ -111,45 +111,45 @@ func (e *Errors) Append(err *Errors) error {
 
 // Emerg log an error with severity Emergency
 func (e *Errors) Emerg(format string, a ...interface{}) error {
-	return e.add(Emergency, format, a)
+	return e.add(Emergency, format, a...)
 }
 
 // Alert log an error with severity Alert
 func (e *Errors) Alert(format string, a ...interface{}) error {
-	return e.add(Alert, format, a)
+	return e.add(Alert, format, a...)
 }
 
 // Crit log an error with severity Critical
 func (e *Errors) Crit(format string, a ...interface{}) error {
-	return e.add(Critical, format, a)
+	return e.add(Critical, format, a...)
 }
 
 // Err log an error with severity Error
 func (e *Errors) Err(format string, a ...interface{}) error {
-	return e.add(Error, format, a)
+	return e.add(Error, format, a...)
 }
 
 // Warning log an error with severity Warning
 func (e *Errors) Warning(format string, a ...interface{}) error {
-	return e.add(Warning, format, a)
+	return e.add(Warning, format, a...)
 }
 
 // Notice log an error with severity Notice
 func (e *Errors) Notice(format string, a ...interface{}) error {
-	return e.add(Notice, format, a)
+	return e.add(Notice, format, a...)
 }
 
 // Info log an error with severity Info
 func (e *Errors) Info(format string, a ...interface{}) error {
-	return e.add(Info, format, a)
+	return e.add(Info, format, a...)
 }
 
 // Debug log an error with severity Debug
 func (e *Errors) Debug(format string, a ...interface{}) error {
-	return e.add(Debug, format, a)
+	return e.add(Debug, format, a...)
 }
 
-func (e *Errors) add(p Priority, format string, a []interface{}) error {
+func (e *Errors) add(p Priority, format string, a ...interface{}) error {
 	// no error in request
 	if len(format) == 0 && len(a) == 0 {
 		return nil
@@ -159,7 +159,7 @@ func (e *Errors) add(p Priority, format string, a []interface{}) error {
 
 	msg := format
 	if len(a) > 0 {
-		msg = fmt.Sprintf(format, a)
+		msg = fmt.Sprintf(format, a...)
 	}
 
 	// add this priority to the end of the list
