@@ -300,6 +300,10 @@ func saveResults(filename string, include, revoked bool) error {
 	for {
 		r, more := <-results
 		if more {
+			// Don't report anything less than warning (info, debug, notice)
+			if r.Errors.Priority() < errors.Warning {
+				continue
+			}
 			for _, e := range r.Errors.List() {
 				var columns []string
 				if r.Cert != nil {
