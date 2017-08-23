@@ -59,7 +59,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 				l.e.Err("Forbidden value in PrintableString '%s'", string(d.Bytes))
 			}
 		case 20: // "TeletexString, T61String"
-			l.e.Warning("Using depricated TeletexString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated TeletexString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in TeletexString '%s'", string(d.Bytes))
 			}
@@ -67,7 +67,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 				l.e.Err("Control character in TeletexString '%s'", string(d.Bytes))
 			}
 		case 21: // "VideotexString"
-			l.e.Warning("Using depricated VideotexString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated VideotexString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in VideotexString '%s'", string(d.Bytes))
 			}
@@ -111,7 +111,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 			}
 
 		case 25: // "GraphicString"
-			l.e.Warning("Using depricated GraphicString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated GraphicString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in GraphicString '%s'", string(d.Bytes))
 			}
@@ -120,7 +120,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 			}
 		case 26: // "VisibleString, ISO646String"
 		case 27: // "GeneralString"
-			l.e.Warning("Using depricated GeneralString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated GeneralString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in GeneralString '%s'", string(d.Bytes))
 			}
@@ -128,7 +128,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 				l.e.Err("Control character in GeneralString '%s'", string(d.Bytes))
 			}
 		case 28: // "UniversalString"
-			l.e.Warning("Using depricated UniversalString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated UniversalString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in UniversalString '%s'", string(d.Bytes))
 			}
@@ -137,7 +137,7 @@ func (l *Linter) CheckFormat(d asn1.RawValue) {
 			}
 		case 29: // "CHARACTER STRING"
 		case 30: // "BMPString"
-			l.e.Warning("Using depricated BMPString for '%s'", string(d.Bytes))
+			l.e.Warning("Using deprecated BMPString for '%s'", string(d.Bytes))
 			if isForbiddenString(d.Bytes) {
 				l.e.Err("Forbidden value in BMPString '%s'", string(d.Bytes))
 			}

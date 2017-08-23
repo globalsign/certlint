@@ -24,7 +24,7 @@ const (
 )
 
 // Config defines the error configuration, currently no configuration options
-// are availible.
+// are available.
 type Config struct {
 }
 
