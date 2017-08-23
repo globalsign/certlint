@@ -2,6 +2,7 @@ package all
 
 import (
 	// Import all default extensions
+	_ "github.com/globalsign/certlint/checks/extensions/adobetimestamp"
 	_ "github.com/globalsign/certlint/checks/extensions/authorityinfoaccess"
 	_ "github.com/globalsign/certlint/checks/extensions/authoritykeyid"
 	_ "github.com/globalsign/certlint/checks/extensions/basicconstraints"
