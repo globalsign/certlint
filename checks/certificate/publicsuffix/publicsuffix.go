@@ -25,16 +25,16 @@ func Check(d *certdata.Data) *errors.Errors {
 	var e = errors.New(nil)
 
 	if len(d.Cert.Subject.CommonName) > 0 {
-		suffix, official := psl.PublicSuffix(strings.ToLower(d.Cert.Subject.CommonName))
-		if official && (fmt.Sprintf("*.%s", suffix) == d.Cert.Subject.CommonName || suffix == d.Cert.Subject.CommonName) {
-			e.Err("Certificate CommonName '%s' equals '%s' from the public suffix list", d.Cert.Subject.CommonName, suffix)
+		suffix, _ := psl.PublicSuffix(strings.ToLower(d.Cert.Subject.CommonName))
+		if fmt.Sprintf("*.%s", suffix) == d.Cert.Subject.CommonName || suffix == d.Cert.Subject.CommonName {
+			e.Err("Certificate CommonName %q equals %q from the public suffix list", d.Cert.Subject.CommonName, suffix)
 		}
 	}
 
 	for _, n := range d.Cert.DNSNames {
-		suffix, official := psl.PublicSuffix(strings.ToLower(n))
-		if official && (fmt.Sprintf("*.%s", suffix) == n || suffix == n) {
-			e.Err("Certificate subjectAltName '%s' equals '%s' from the public suffix list", n, suffix)
+		suffix, _ := psl.PublicSuffix(strings.ToLower(n))
+		if fmt.Sprintf("*.%s", suffix) == n || suffix == n {
+			e.Err("Certificate subjectAltName %q equals %q from the public suffix list", n, suffix)
 		}
 	}
 
