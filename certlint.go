@@ -318,9 +318,12 @@ func saveResults(filename string, include, revoked bool) error {
 						e.Error(),
 					}
 
-					// Check if certificate is revoked when idicated
+					// Check if certificate is revoked when idicated and not expired
 					if revoked {
-						if isRevoked, ok := revoke.VerifyCertificate(r.Cert); ok {
+						if r.Cert.NotAfter.Before(time.Now()) {
+							// Expired certs are often purged of the revocation list/status
+							columns = append(columns, "expired")
+						} else if isRevoked, ok := revoke.VerifyCertificate(r.Cert); ok {
 							columns = append(columns, fmt.Sprintf("%t", isRevoked))
 						} else {
 							columns = append(columns, "failed")
