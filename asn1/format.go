@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/asn1"
 	"regexp"
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -197,6 +198,11 @@ func isNumericString(b []byte) bool {
 func isForbiddenString(b []byte) bool {
 	for len(b) == 0 {
 		return false
+	}
+
+	switch strings.ToLower(string(b)) {
+	case "n/a":
+		return true
 	}
 
 	for len(b) > 0 {
