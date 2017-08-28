@@ -15,7 +15,7 @@ func TestPublicSuffix(t *testing.T) {
 			Subject: pkix.Name{
 				CommonName: "*.com",
 			},
-			DNSNames: []string{"*.com", "com", "*.co.uk", "gov.uk", "*.eu.com"},
+			DNSNames: []string{"*.com", "com", "*.co.uk", "gov.uk", "*.eu.com", "internalname"},
 		},
 		Type: "DV",
 	}

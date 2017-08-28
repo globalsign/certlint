@@ -25,16 +25,22 @@ func Check(d *certdata.Data) *errors.Errors {
 	var e = errors.New(nil)
 
 	if len(d.Cert.Subject.CommonName) > 0 {
-		suffix, _ := psl.PublicSuffix(strings.ToLower(d.Cert.Subject.CommonName))
+		suffix, icann := psl.PublicSuffix(strings.ToLower(d.Cert.Subject.CommonName))
 		if fmt.Sprintf("*.%s", suffix) == d.Cert.Subject.CommonName || suffix == d.Cert.Subject.CommonName {
-			e.Err("Certificate CommonName %q equals %q from the public suffix list", d.Cert.Subject.CommonName, suffix)
+			// if there is a dot on the suffix, it must be on the psl
+			if icann || strings.Count(suffix, ".") > 0 {
+				e.Err("Certificate CommonName %q equals %q from the public suffix list", d.Cert.Subject.CommonName, suffix)
+			}
 		}
 	}
 
 	for _, n := range d.Cert.DNSNames {
-		suffix, _ := psl.PublicSuffix(strings.ToLower(n))
+		suffix, icann := psl.PublicSuffix(strings.ToLower(n))
 		if fmt.Sprintf("*.%s", suffix) == n || suffix == n {
-			e.Err("Certificate subjectAltName %q equals %q from the public suffix list", n, suffix)
+			// if there is a dot on the suffix, it must be on the psl
+			if icann || strings.Count(suffix, ".") > 0 {
+				e.Err("Certificate subjectAltName %q equals %q from the public suffix list", n, suffix)
+			}
 		}
 	}
 
