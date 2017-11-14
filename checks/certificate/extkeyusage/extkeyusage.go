@@ -22,21 +22,26 @@ func init() {
 func Check(d *certdata.Data) *errors.Errors {
 	var e = errors.New(nil)
 
+	if len(d.Cert.ExtKeyUsage) == 0 && len(d.Cert.UnknownExtKeyUsage) == 0 {
+		e.Err("Certificate contains no extended key usage")
+		return e
+	}
+
 	for _, ku := range d.Cert.ExtKeyUsage {
 		switch d.Type {
 		case "DV", "OV", "EV":
 			if ku != x509.ExtKeyUsageServerAuth && ku != x509.ExtKeyUsageClientAuth && ku != x509.ExtKeyUsageMicrosoftServerGatedCrypto {
-				e.Err("Certificate contains a key usage different from ServerAuth, ClientAuth or ServerGatedCrypto")
+				e.Err("Certificate contains an extended key usage different from ServerAuth, ClientAuth or ServerGatedCrypto")
 				return e
 			}
 		case "PS":
 			if ku != x509.ExtKeyUsageClientAuth && ku != x509.ExtKeyUsageEmailProtection {
-				e.Err("Certificate contains a key usage different from ClientAuth or EmailProtection")
+				e.Err("Certificate contains an extended key usage different from ClientAuth or EmailProtection")
 				return e
 			}
 		case "CS":
 			if ku != x509.ExtKeyUsageCodeSigning {
-				e.Err("Certificate contains a key usage different from ClientAuth or EmailProtection")
+				e.Err("Certificate contains an extended key usage different from ClientAuth or EmailProtection")
 				return e
 			}
 		}
