@@ -56,7 +56,7 @@ func TestTestData(t *testing.T) {
 
 		der := getCertificate("./testdata/" + f.Name())
 		if len(der) > 0 {
-			result := do(icaCache, der, nil, true, true)
+			result := do(icaCache, der, true, true)
 			if len(result.Errors.List()) == 0 {
 				t.Errorf("Expected some errors, got %d in %s", len(result.Errors.List()), f.Name())
 				continue
@@ -78,7 +78,7 @@ func BenchmarkTestData(b *testing.B) {
 		if len(der) > 0 {
 			b.Run(f.Name(), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					do(icaCache, der, nil, true, true)
+					do(icaCache, der, true, true)
 				}
 			})
 		}

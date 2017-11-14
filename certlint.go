@@ -9,8 +9,10 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -19,6 +21,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/globalsign/certlint/asn1"
@@ -49,15 +52,21 @@ type testResult struct {
 var jobs = make(chan []byte, 100)
 var results = make(chan testResult, 100)
 var count int64
+var saved int64
+var wgSave sync.WaitGroup
+var wgBulk sync.WaitGroup
+var intPool *x509.CertPool
+var trusted bool
 
 func main() {
 	var cert = flag.String("cert", "", "Certificate file")
 	var bulk = flag.String("bulk", "", "Bulk certificates file")
-	var issuer = flag.String("issuer", "", "Certificate file")
+	var issuer = flag.String("issuer", "", "Pem file with one or more issuers")
 	var expired = flag.Bool("expired", false, "Test expired certificates")
 	var report = flag.String("report", "report.csv", "Report filename")
 	var include = flag.Bool("include", false, "Include certificates in report")
 	var revoked = flag.Bool("revoked", false, "Check if certificates are revoked")
+	trusted = *flag.Bool("trusted", false, "Only check trusted certificates")
 	var pprof = flag.String("pprof", "", "Generate pprof profile (cpu,mem,trace)")
 	var help = flag.Bool("help", false, "Show this help")
 
@@ -83,20 +92,43 @@ func main() {
 	// Prevent CloudFlare informational log messages
 	log.Level = log.LevelError
 
+	// Load intermediates
+	if len(*issuer) > 0 {
+		data, err := ioutil.ReadFile(*issuer)
+		if err != nil {
+			log.Fatal("Failed to load intermediates:", err)
+		}
+		intPool = x509.NewCertPool()
+		intPool.AppendCertsFromPEM(data)
+	}
+
 	// Start the bulk checking logic to parse a pem file with more certificates and
 	// save the results to a csv file.
 	if len(*bulk) > 0 {
+		wgSave.Add(1)
+		go saveResults(*report, *include, *revoked)
+
 		for i := 1; i <= runtime.NumCPU(); i++ {
+			wgBulk.Add(1)
 			go runBulk(*expired)
 		}
-		go saveResults(*report, *include, *revoked)
+
 		doBulk(*bulk)
+
+		fmt.Println("Finshed reading bulk file, waiting for processing to finish")
+		wgBulk.Wait()
+
+		close(results)
+
+		fmt.Println("Processing finished, waiting till all results are saved")
+		wgSave.Wait()
+
 		return
 	}
 
 	// Check one certificate and print results on screen
 	der := getCertificate(*cert)
-	result := do(nil, der, issuer, *expired, true)
+	result := do(nil, der, *expired, true)
 
 	fmt.Println("Certificate Type:", result.Type)
 	if result.Errors != nil {
@@ -108,7 +140,7 @@ func main() {
 
 // do performs the checks on the der encoding and the actual certificate, if exp
 // is set true it will also check expired certificates.
-func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testResult {
+func do(icaCache *lru.Cache, der []byte, exp, rtrn bool) testResult {
 	// use a local cache to prevent that we need to wait on a local
 	var result testResult
 	result.Errors = errors.New(nil)
@@ -139,18 +171,27 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 			return result
 		}
 
-		var pool *x509.CertPool
-		type issuerCache struct {
-			Trusted bool
-			Issuer  *x509.Certificate
-			Pool    *x509.CertPool
+		// Check if this is a publicly trusted certificate
+		opts := x509.VerifyOptions{
+			CurrentTime:   d.Cert.NotBefore,
+			Intermediates: intPool,
+			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
 		}
 
-		// If we have the issuer certificate verify the raw issuer struct and signatures
-		if issuer != nil && len(*issuer) > 0 {
-			d.SetIssuer(getCertificate(*issuer))
-			pool.AddCert(d.Issuer)
+		chain, err := d.Cert.Verify(opts)
+		if err == nil && len(chain) > 0 && len(chain[0]) > 1 {
+			d.Issuer = chain[0][1]
+
 		} else {
+			// Issuer not in default pool, use issuer from AIA cache, download if
+			// not in cache and when certificate has not expired.
+			pool := intPool
+			type issuerCache struct {
+				Trusted bool
+				Issuer  *x509.Certificate
+				Pool    *x509.CertPool
+			}
+
 			var key string
 
 			// Create a unique ID to cache the chain of this issuer
@@ -188,10 +229,11 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 
 				// Check if this is a publicly trusted certificate
 				opts := x509.VerifyOptions{
+					CurrentTime:   d.Cert.NotBefore,
 					Intermediates: pool,
 					KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
 				}
-				if _, err = d.Cert.Verify(opts); err != nil {
+				if chain, err = d.Cert.Verify(opts); err != nil {
 					result.Trusted = false
 				}
 
@@ -202,8 +244,9 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 			}
 		}
 
-		if !result.Trusted {
-			result.Errors.Err("Failed to verify chain for %s", d.Cert.Issuer.CommonName)
+		if trusted && !result.Trusted {
+			fmt.Printf("Failed to verify chain for %s\n", d.Cert.Issuer.CommonName)
+			result.Errors.Err("Failed to verify chain for %s\n", d.Cert.Issuer.CommonName)
 			return result
 		}
 
@@ -216,7 +259,7 @@ func do(icaCache *lru.Cache, der []byte, issuer *string, exp, rtrn bool) testRes
 	}
 
 	// In batch mode we want to queue results
-	if !rtrn && len(result.Errors.List()) > 0 {
+	if !rtrn && result.Errors.IsError() {
 		results <- result
 	}
 
@@ -253,6 +296,7 @@ func doBulk(bulk string) {
 				count++
 				jobs <- block.Bytes
 			} else {
+				fmt.Println(string(pemCert))
 				var e = errors.New(nil)
 				if err != nil {
 					e.Err(err.Error())
@@ -272,12 +316,13 @@ func doBulk(bulk string) {
 }
 
 func runBulk(exp bool) {
+	defer wgBulk.Done()
 	var icaCache = lru.New(200)
 
 	for {
 		der, more := <-jobs
 		if more {
-			do(icaCache, der, nil, exp, false)
+			do(icaCache, der, exp, false)
 		} else {
 			break
 		}
@@ -285,6 +330,8 @@ func runBulk(exp bool) {
 }
 
 func saveResults(filename string, include, revoked bool) error {
+	defer wgSave.Done()
+
 	file, err := os.Create(filename)
 	if err != nil {
 		fmt.Println(err)
@@ -294,70 +341,81 @@ func saveResults(filename string, include, revoked bool) error {
 
 	writer := csv.NewWriter(file)
 	writer.UseCRLF = true
-	writer.Write([]string{"Issuer", "CN", "O", "Serial", "NotBefore", "NotAfter", "Type", "Error", "Revoked", "Cert"})
+	writer.Write([]string{"Issuer", "CN", "O", "Serial", "NotBefore", "NotAfter", "Type", "Priority", "Error", "Revoked", "Cert", "Fingerprint"})
 	writer.Flush()
 
 	for {
 		r, more := <-results
-		if more {
-			// Don't report anything less than warning (info, debug, notice)
-			if r.Errors.Priority() < errors.Warning {
-				continue
-			}
-			for _, e := range r.Errors.List() {
-				var columns []string
-				if r.Cert != nil {
-					columns = []string{
-						fmt.Sprintf("%s, %s", r.Cert.Issuer.CommonName, r.Cert.Issuer.Organization),
-						r.Cert.Subject.CommonName,
-						strings.Join(r.Cert.Subject.Organization, ", "),
-						fmt.Sprintf("%x", r.Cert.SerialNumber),
-						r.Cert.NotBefore.Format("2006-01-02"),
-						r.Cert.NotAfter.Format("2006-01-02"),
-						r.Type,
-						e.Error(),
-					}
-
-					// Check if certificate is revoked when idicated and not expired
-					if revoked {
-						if r.Cert.NotAfter.Before(time.Now()) {
-							// Expired certs are often purged of the revocation list/status
-							columns = append(columns, "expired")
-						} else if isRevoked, ok := revoke.VerifyCertificate(r.Cert); ok {
-							columns = append(columns, fmt.Sprintf("%t", isRevoked))
-						} else {
-							columns = append(columns, "failed")
-						}
-					} else {
-						columns = append(columns, "")
-					}
-
-					// Do we need to include the certificate
-					if include {
-						columns = append(columns, string(pem.EncodeToMemory(&pem.Block{
-							Type:  "CERTIFICATE",
-							Bytes: r.Der,
-						})))
-					} else {
-						columns = append(columns, "")
-					}
-
-				} else {
-					columns = []string{"", "", "", "", "", "", "", e.Error(), "", r.Pem}
-				}
-
-				err := writer.Write(columns)
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-
-				writer.Flush()
-			}
-		} else {
+		if !more {
 			break
 		}
+
+		// Don't report anything less than warning (info, debug, notice)
+		if r.Errors.Priority() < errors.Warning {
+			continue
+		}
+
+		// Add all errors to file
+		for _, e := range r.Errors.List() {
+			var columns []string
+			if r.Cert != nil {
+				columns = []string{
+					fmt.Sprintf("%s, %s", r.Cert.Issuer.CommonName, r.Cert.Issuer.Organization),
+					r.Cert.Subject.CommonName,
+					strings.Join(r.Cert.Subject.Organization, ", "),
+					hex.EncodeToString(r.Cert.SerialNumber.Bytes()),
+					r.Cert.NotBefore.Format("2006-01-02"),
+					r.Cert.NotAfter.Format("2006-01-02"),
+					r.Type,
+					e.Priority().String(),
+					e.Error(),
+				}
+
+				// Check if certificate is revoked when idicated and not expired
+				if revoked {
+					if r.Cert.NotAfter.Before(time.Now()) {
+						// Expired certs are often purged of the revocation list/status
+						columns = append(columns, "expired")
+					} else if isRevoked, ok := revoke.VerifyCertificate(r.Cert); ok {
+						columns = append(columns, fmt.Sprintf("%t", isRevoked))
+					} else {
+						columns = append(columns, "failed")
+					}
+				} else {
+					columns = append(columns, "")
+				}
+
+				// Do we need to include the certificate
+				if include {
+					columns = append(columns, string(pem.EncodeToMemory(&pem.Block{
+						Type:  "CERTIFICATE",
+						Bytes: r.Der,
+					})))
+				} else {
+					columns = append(columns, "")
+				}
+
+				// Certificate Fingerprint
+				fingerprint := sha256.Sum256(r.Der)
+				columns = append(columns, hex.EncodeToString(fingerprint[:]))
+
+			} else {
+				columns = []string{"", "", "", "", "", "", "", e.Priority().String(), e.Error(), "", r.Pem}
+			}
+
+			err := writer.Write(columns)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			saved++
+		}
 	}
+
+	writer.Flush()
+
+	fmt.Printf("Saved %d findings\n", saved)
 	return nil
 }
 
