@@ -18,6 +18,24 @@ func init() {
 func Check(d *certdata.Data) *errors.Errors {
 	var e = errors.New(nil)
 
+	// OCSP signing certificates should not contain an OCSP server
+	if d.Type == "OCSP" {
+		if len(d.Cert.OCSPServer) > 0 {
+			e.Warning("OCSP signing certificate contains an OCSP server")
+		}
+
+		// no extra checks needed
+		return e
+	}
+
+	// Self signed CA certificates should not contain any revocation sources
+	if d.Type == "CA" && d.Cert.CheckSignatureFrom(d.Cert) == nil {
+		if len(d.Cert.CRLDistributionPoints) != 0 && len(d.Cert.OCSPServer) != 0 {
+			e.Warning("Self signed CA certificates should not contain any revocation sources")
+		}
+		return e
+	}
+
 	if len(d.Cert.CRLDistributionPoints) == 0 && len(d.Cert.OCSPServer) == 0 {
 		e.Err("Certificate contains no CRL or OCSP server")
 		return e
