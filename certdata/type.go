@@ -13,11 +13,27 @@ import (
 // certificate. It's important that we reliably identify the purpose to apply
 // the right checks for that certificate type.
 func (d *Data) setCertificateType() error {
+	// We want to be able to detect 'false' CA certificates, classify as CA
+	// certificate is basic contains and key usage certsign are set.
+	if d.Cert.IsCA && d.Cert.KeyUsage&x509.KeyUsageCertSign != 0 {
+		d.Type = "CA"
+		return nil
+	}
+
+	// The fallback type is used when a certificate could be any of a range
+	// but further checks need to define the exact type. When these checks fail
+	// the fallback type is used.
+	var fallbackType string
+
+	// Based on ExtKeyUsage
 	for _, ku := range d.Cert.ExtKeyUsage {
 		switch ku {
 		case x509.ExtKeyUsageServerAuth:
 			// Try to determine certificate type via policy oid
 			d.Type = getType(d.Cert.PolicyIdentifiers)
+			fallbackType = "DV"
+		case x509.ExtKeyUsageClientAuth:
+			fallbackType = "PS"
 		case x509.ExtKeyUsageEmailProtection:
 			d.Type = "PS"
 		case x509.ExtKeyUsageCodeSigning:
@@ -37,6 +53,20 @@ func (d *Data) setCertificateType() error {
 	// When determined by Policy Identifier we can stop
 	if d.Type != "" {
 		return nil
+	}
+
+	// Based on UnknownExtKeyUsage
+	for _, ku := range d.Cert.UnknownExtKeyUsage {
+		switch {
+		case ku.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 21, 19}):
+			// dsEmailReplication
+			d.Type = "PS"
+			return nil
+		case ku.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 8, 2, 2}):
+			// IPSEC Protection
+			d.Type = "IPSEC"
+			return nil
+		}
 	}
 
 	// Check if the e-mailAddress is set in the DN
@@ -73,8 +103,12 @@ func (d *Data) setCertificateType() error {
 		return nil
 	}
 
+	if len(fallbackType) > 0 {
+		d.Type = fallbackType
+		return nil
+	}
+
 	if d.Type == "" {
-		fmt.Println(d.Cert.Subject)
 		return fmt.Errorf("Could not determine certificate type")
 	}
 	return nil
