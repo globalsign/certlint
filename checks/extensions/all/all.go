@@ -11,7 +11,10 @@ import (
 	_ "github.com/globalsign/certlint/checks/extensions/extkeyusage"
 	_ "github.com/globalsign/certlint/checks/extensions/keyusage"
 	_ "github.com/globalsign/certlint/checks/extensions/nameconstraints"
+	_ "github.com/globalsign/certlint/checks/extensions/ocspnocheck"
+	_ "github.com/globalsign/certlint/checks/extensions/pdfrevocation"
 	_ "github.com/globalsign/certlint/checks/extensions/policyidentifiers"
+	_ "github.com/globalsign/certlint/checks/extensions/smimecapabilities"
 	_ "github.com/globalsign/certlint/checks/extensions/subjectaltname"
 	_ "github.com/globalsign/certlint/checks/extensions/subjectkeyid"
 )
