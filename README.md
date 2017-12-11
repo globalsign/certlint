@@ -52,17 +52,17 @@ Usage of ./certlint:
 
 ##### CLI: One certificate
 ```bash
-$ certlinter -cert certificate.pem
+$ certlint -cert certificate.pem
 ```
 
 ##### CLI: A series of PEM encoded certificates
 ```bash
-$ certlinter -bulk largestore.pem
+$ certlint -bulk largestore.pem
 ```
 
 ##### CLI: Testing expired certificates
 ```bash
-$ certlinter -expired -bulk largestore.pem
+$ certlint -expired -bulk largestore.pem
 ```
 
 ##### API: Usage
