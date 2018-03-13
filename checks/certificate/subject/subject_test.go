@@ -11,8 +11,8 @@ import (
 
 func TestSubject(t *testing.T) {
 	n := &pkix.Name{
-		Organization:       []string{"Organization Name that is exceeding the maximum lenght of 64 characters"},
-		OrganizationalUnit: []string{"Organization Unit value exceeding the maximum lenght of 64 characters"},
+		Organization:       []string{"Organization Name that is exceeding the maximum length of 64 characters"},
+		OrganizationalUnit: []string{"Organization Unit value exceeding the maximum length of 64 characters"},
 		CommonName:         "just-a-really-really-really-really-loooooooooong-domain-exceeding-64chars.example.com",
 	}
 

@@ -12,7 +12,7 @@ const checkName = "Subject Check"
 
 func init() {
 	filter := &checks.Filter{
-	//Type: []string{"DV", "OV", "IV", "EV"},
+		//Type: []string{"DV", "OV", "IV", "EV"},
 	}
 	checks.RegisterCertificateCheck(checkName, filter, Check)
 }
@@ -57,7 +57,7 @@ func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 
 	// Field related requirements
 	//
-	// Max field lenght:
+	// Max field length:
 	// https://www.itu.int/ITU-T/formal-language/itu-t/x/x520/2001/UpperBounds.html
 	for _, n := range dn {
 		switch {
