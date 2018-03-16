@@ -135,6 +135,9 @@ func main() {
 		for _, err := range result.Errors.List() {
 			fmt.Println(err)
 		}
+		if result.Errors.Priority() > errors.Warning {
+			os.Exit(1)
+		}
 	}
 }
 
