@@ -34,6 +34,8 @@ Usage of ./certlint:
         Bulk certificates file
   -cert string
         Certificate file
+  -errlevel string
+        Exit non-zero for Errors at this level (default "error")
   -expired
         Test expired certificates
   -help
@@ -53,6 +55,11 @@ Usage of ./certlint:
 ##### CLI: One certificate
 ```bash
 $ certlint -cert certificate.pem
+```
+
+##### CLI: One certificate, exiting non-zero for Warning and above
+```bash
+$ certlint -errlevel warning -cert certificate.pem
 ```
 
 ##### CLI: A series of PEM encoded certificates

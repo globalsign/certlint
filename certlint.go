@@ -49,6 +49,18 @@ type testResult struct {
 	Errors  *errors.Errors
 }
 
+// if errors package changes, this must change
+var priorityMap = map[string]errors.Priority {
+	"debug"     : errors.Debug,
+	"info"      : errors.Info,
+	"notice"    : errors.Notice,
+	"warning"   : errors.Warning,
+	"error"     : errors.Error,
+	"critical"  : errors.Critical,
+	"alert"     : errors.Alert,
+	"emergency" : errors.Emergency,
+}
+
 var jobs = make(chan []byte, 100)
 var results = make(chan testResult, 100)
 var count int64
@@ -67,6 +79,7 @@ func main() {
 	var include = flag.Bool("include", false, "Include certificates in report")
 	var revoked = flag.Bool("revoked", false, "Check if certificates are revoked")
 	trusted = *flag.Bool("trusted", false, "Only check trusted certificates")
+	var flagErr = flag.String("errlevel", "error", "Exit non-zero for Errors at this level")
 	var pprof = flag.String("pprof", "", "Generate pprof profile (cpu,mem,trace)")
 	var help = flag.Bool("help", false, "Show this help")
 
@@ -75,6 +88,13 @@ func main() {
 	if *help || (len(*cert) < 1 && len(*bulk) < 1) {
 		flag.PrintDefaults()
 		return
+	}
+
+	errlevel := strings.ToLower(*flagErr)
+	// Sanity-check for flagErr
+	if _, included := priorityMap[errlevel]; ! included {
+		fmt.Println("Supplied -errlevel is invalid")
+		os.Exit(1)
 	}
 
 	// Is any profiling requested?
@@ -135,7 +155,7 @@ func main() {
 		for _, err := range result.Errors.List() {
 			fmt.Println(err)
 		}
-		if result.Errors.Priority() > errors.Warning {
+		if result.Errors.Priority() >= priorityMap[errlevel] {
 			os.Exit(1)
 		}
 	}
