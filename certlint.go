@@ -132,9 +132,9 @@ func main() {
 
 	fmt.Println("Processed Certificate Type:", result.Type)
 	if result.Errors != nil {
-		fmt.Printf("Certificate Errors: %v\n", len(result.Errors.List()))
+		fmt.Printf("Certificate Errors: %d\n", len(result.Errors.List()))
 		for _, err := range result.Errors.List() {
-			fmt.Printf("  Priority: %s, Message: %v\n", err.Priority(), err)
+			fmt.Printf("  Priority: %s, Message: %s\n", err.Priority(), err.Error())
 		}
 		if result.Errors.Priority() > errors.Warning {
 			os.Exit(1)
