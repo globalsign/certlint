@@ -80,7 +80,7 @@ func ctEntry(entry ct.LogEntry) {
 func check(der []byte) {
 	var e = errors.New(nil)
 
-	// Check the ASN1 structure for common formatting errros
+	// Check the ASN1 structure for common formatting errors
 	al := new(asn1.Linter)
 	e.Append(al.CheckStruct(der))
 
