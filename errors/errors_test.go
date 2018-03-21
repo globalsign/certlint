@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestErrros(t *testing.T) {
+func TestErrors(t *testing.T) {
 	e := new(Errors)
 	e.Warning("Warning")
 	if e.Priority() != Warning {

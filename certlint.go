@@ -169,7 +169,7 @@ func do(icaCache *lru.Cache, der []byte, exp, rtrn bool) testResult {
 			return result
 		}
 
-		// Check if we need to skip expied certificates
+		// Check if we need to skip expired certificates
 		if !exp && d.Cert.NotAfter.Before(time.Now()) {
 			return result
 		}
