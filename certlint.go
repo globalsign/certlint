@@ -150,10 +150,11 @@ func main() {
 	der := getCertificate(*cert)
 	result := do(nil, der, *expired, true)
 
-	fmt.Println("Certificate Type:", result.Type)
+	fmt.Println("Processed Certificate Type:", result.Type)
 	if result.Errors != nil {
+		fmt.Printf("Certificate Errors: %d\n", len(result.Errors.List()))
 		for _, err := range result.Errors.List() {
-			fmt.Println(err)
+			fmt.Printf("  Priority: %s, Message: %s\n", err.Priority(), err.Error())
 		}
 		if result.Errors.Priority() >= priorityMap[errlevel] {
 			os.Exit(1)
