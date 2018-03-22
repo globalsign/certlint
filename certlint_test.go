@@ -4,6 +4,11 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/globalsign/certlint/asn1"
@@ -46,25 +51,148 @@ accZ5e1iOtNIBTVUEaQ0YxNwhZqnQO4rgBFCnEpNH6TB62hXUD6u/oP/WB48Wmek
 KPgaoWHMo5sOFQnw5A==
 -----END CERTIFICATE-----`
 
+func TestMain(m *testing.M) {
+	build := exec.Command("go", "build")
+	berr := build.Run()
+	if berr != nil {
+		fmt.Printf("could not build before tests: %v", berr)
+		os.Exit(1)
+	}
+
+	retcode := m.Run()
+
+	clean := exec.Command("go", "clean", "-x")
+	cerr := clean.Run()
+	if cerr != nil {
+		fmt.Printf("could not cleanup after tests: %v", cerr)
+		os.Exit(1)
+	}
+
+	os.Exit(retcode)
+}
+
 func TestTestData(t *testing.T) {
 	var icaCache = lru.New(200)
 
 	// TODO: Check for specific errors per certificate to be sure we don't miss one
-	files, _ := ioutil.ReadDir("./testdata")
+	files, _ := filepath.Glob("./testdata/*.pem")
 	for _, f := range files {
-		fmt.Printf("---- %s ----\n", f.Name())
+		fname := path.Base(f)
+		fmt.Printf("---- %s ----\n", fname)
 
-		der := getCertificate("./testdata/" + f.Name())
+		der := getCertificate("./testdata/" + fname)
 		if len(der) > 0 {
 			result := do(icaCache, der, true, true)
 			if len(result.Errors.List()) == 0 {
-				t.Errorf("Expected some errors, got %d in %s", len(result.Errors.List()), f.Name())
+				t.Errorf("Expected some errors, got %d in %s", len(result.Errors.List()), fname)
 				continue
 			}
 			for _, err := range result.Errors.List() {
-				fmt.Printf("%s (%s)\n", err.Error(), result.Type)
+				fmt.Printf("Priority: %s, Message: %s (%s)\n", err.Priority(), err.Error(), result.Type)
 			}
 		}
+	}
+}
+
+func TestCLITestData(t *testing.T) {
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testdata := path.Join(dir, "testdata")
+	files, _ := filepath.Glob("./testdata/*.pem")
+	for _, f := range files {
+		fname := path.Base(f)
+		t.Run(fname, func(t *testing.T) {
+			fmt.Printf("---- CLI %s ----\n", fname)
+
+			golden := path.Join(testdata, fname+".golden")
+			crt := path.Join(testdata, fname)
+			bin := path.Join(dir, "certlint")
+
+			// raise errlevel to Alert because non-zero return causes the test to fail
+			cli_args := []string{"-expired", "-errlevel", "alert", "-cert", crt}
+			cmd := exec.Command(bin, cli_args...)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// TODO: allow for programatic refresh of golden files as a test argument
+			//if *update {
+			//	ioutil.WriteFile(golden, output, 0640)
+			//}
+
+			actual := string(output)
+
+			expected, err := ioutil.ReadFile(golden)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !reflect.DeepEqual(actual, string(expected)) {
+				t.Fatalf("actual = %T:%s\nexpected = %T:%s\n", actual, actual, expected, expected)
+			}
+		})
+	}
+}
+
+func TestCLIReturn(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		retv string
+	}{
+		{
+			"Error Level Info",
+			[]string{
+				"-expired", "-errlevel", "info", "-cert", "testdata/invalid_encoding2.pem",
+			},
+			"exit status 1",
+		},
+		{
+			"Error Level Warning",
+			[]string{
+				"-expired", "-errlevel", "warning", "-cert", "testdata/invalid_encoding2.pem",
+			},
+			"exit status 1",
+		},
+		{
+			"Error Level Critical",
+			[]string{
+				"-expired", "-errlevel", "critical", "-cert", "testdata/invalid_encoding2.pem",
+			},
+			"exit status 0",
+		},
+		{
+			"Error Level Unspecified (default is Error)",
+			[]string{"-expired", "-cert", "testdata/invalid_encoding2.pem"},
+			"exit status 1",
+		},
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fmt.Printf("---- CLI %s ----\n", tt.name)
+
+			bin := path.Join(dir, "certlint")
+			cmd := exec.Command(bin, tt.args...)
+			_, err = cmd.CombinedOutput()
+			if err != nil {
+				actual := err.Error()
+				expected := tt.retv
+
+				if !reflect.DeepEqual(actual, expected) {
+					t.Fatalf("actual = %T:%s, expected = %T:%s", actual, actual, expected, expected)
+				}
+			}
+
+		})
 	}
 }
 
@@ -72,11 +200,12 @@ func BenchmarkTestData(b *testing.B) {
 	var icaCache = lru.New(200)
 
 	// TODO: Check for specific errors per certificate to be sure we don't miss one
-	files, _ := ioutil.ReadDir("./testdata")
+	files, _ := filepath.Glob("./testdata/*.pem")
 	for _, f := range files {
-		der := getCertificate("./testdata/" + f.Name())
+		fname := path.Base(f)
+		der := getCertificate("./testdata/" + fname)
 		if len(der) > 0 {
-			b.Run(f.Name(), func(b *testing.B) {
+			b.Run(fname, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					do(icaCache, der, true, true)
 				}
