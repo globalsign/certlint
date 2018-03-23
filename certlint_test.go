@@ -169,6 +169,11 @@ func TestCLIReturn(t *testing.T) {
 			[]string{"-expired", "-cert", "testdata/invalid_encoding2.pem"},
 			"exit status 1",
 		},
+		{
+			"Supplied Error Level Invalid",
+			[]string{"-expired", "-errlevel", "garbage", "-cert", "testdata/invalid_encoding2.pem"},
+			"exit status 1",
+		},
 	}
 
 	dir, err := os.Getwd()
