@@ -50,15 +50,15 @@ type testResult struct {
 }
 
 // if errors package changes, this must change
-var priorityMap = map[string]errors.Priority {
-	"debug"     : errors.Debug,
-	"info"      : errors.Info,
-	"notice"    : errors.Notice,
-	"warning"   : errors.Warning,
-	"error"     : errors.Error,
-	"critical"  : errors.Critical,
-	"alert"     : errors.Alert,
-	"emergency" : errors.Emergency,
+var priorityMap = map[string]errors.Priority{
+	"debug":     errors.Debug,
+	"info":      errors.Info,
+	"notice":    errors.Notice,
+	"warning":   errors.Warning,
+	"error":     errors.Error,
+	"critical":  errors.Critical,
+	"alert":     errors.Alert,
+	"emergency": errors.Emergency,
 }
 
 var jobs = make(chan []byte, 100)
@@ -92,7 +92,7 @@ func main() {
 
 	errlevel := strings.ToLower(*flagErr)
 	// Sanity-check for flagErr
-	if _, included := priorityMap[errlevel]; ! included {
+	if _, included := priorityMap[errlevel]; !included {
 		fmt.Println("Supplied -errlevel is invalid")
 		os.Exit(1)
 	}
