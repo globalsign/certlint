@@ -6,6 +6,11 @@ go:
   - 1.8
   - master
 
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
+
 before_install:
   - go get -t -v ./...
 
