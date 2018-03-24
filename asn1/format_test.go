@@ -10,7 +10,7 @@ func TestIsForbiddenString(t *testing.T) {
 
 	for _, v := range forbidden {
 		if !isForbiddenString([]byte(v)) {
-			t.Errorf("Forbidden string passed check", v)
+			t.Errorf("Forbidden string passed check: %q", v)
 		}
 	}
 
@@ -19,7 +19,7 @@ func TestIsForbiddenString(t *testing.T) {
 
 	for _, v := range accepted {
 		if isForbiddenString([]byte(v)) {
-			t.Errorf("Accepted string did not pass check", v)
+			t.Errorf("Accepted string did not pass check: %q", v)
 		}
 	}
 }
