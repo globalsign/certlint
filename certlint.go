@@ -257,7 +257,7 @@ func do(icaCache *lru.Cache, der []byte, exp, rtrn bool) testResult {
 					Intermediates: pool,
 					KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
 				}
-				if chain, err = d.Cert.Verify(opts); err != nil {
+				if _, err = d.Cert.Verify(opts); err != nil {
 					result.Trusted = false
 				}
 
