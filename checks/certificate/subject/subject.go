@@ -65,7 +65,7 @@ func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 		// commonName
 		// If present, this field MUST contain a single IP address or Fully‐Qualified Domain Name
 		case commonName.Equal(n.Type):
-			// report deprecated common name field as info until not commenly used/accepted
+			// report deprecated common name field as info until not commonly used/accepted
 			e.Info("commonName field is deprecated")
 
 			// check if value is exceeding max length
@@ -74,7 +74,7 @@ func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 			}
 
 		case emailAddress.Equal(n.Type):
-			// report deprecated email address field as info until not commenly used/accepted
+			// report deprecated email address field as info until not commonly used/accepted
 			e.Info("emailAddress field is deprecated")
 
 			// RFC5280: ub-emailaddress-length was changed from 128 to 255 in order to

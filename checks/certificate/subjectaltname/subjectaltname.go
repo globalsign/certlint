@@ -33,7 +33,7 @@ func init() {
 func Check(d *certdata.Data) *errors.Errors {
 	var e = errors.New(nil)
 
-	// TODO: Should we check against cross usage of certificate types (for example DV certificate with emial address)?
+	// TODO: Should we check against cross usage of certificate types (for example DV certificate with email address)?
 
 	switch d.Type {
 	case "PS":

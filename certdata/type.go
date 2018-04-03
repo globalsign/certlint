@@ -45,7 +45,7 @@ func (d *Data) setCertificateType() error {
 		}
 	}
 
-	// If we have no kown key usage, try the policy list again
+	// If we have no known key usage, try the policy list again
 	if d.Type == "" {
 		d.Type = getType(d.Cert.PolicyIdentifiers)
 	}
