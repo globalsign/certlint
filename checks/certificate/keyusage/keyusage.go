@@ -61,7 +61,7 @@ func Check(d *certdata.Data) *errors.Errors {
 	}
 
 	// If we have not defined this certificate as a CA certificate, the following
-	// key ussages would not be allowed
+	// key usages would not be allowed
 	if d.Type != "CA" {
 		if d.Cert.KeyUsage == 0 {
 			e.Err("Certificate has no key usage set")

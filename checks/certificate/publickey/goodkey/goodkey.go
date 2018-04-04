@@ -1,6 +1,6 @@
 // Package goodkey copied from "github.com/letsencrypt/boulder/goodkey"
 //
-// This package is vovered under the Mozilla Public License Version 2.0
+// This package is covered under the Mozilla Public License Version 2.0
 //
 // Removed depency on letsencrypt core and allow key size above 4096
 package goodkey

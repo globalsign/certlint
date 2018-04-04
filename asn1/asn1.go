@@ -21,7 +21,7 @@ func (l *Linter) CheckStruct(der []byte) *errors.Errors {
 }
 
 // walk is a recursive call that walks over the ASN1 structured data until no
-// remaining bytes are left. For each non compound is will call the ASN1 format
+// remaining bytes are left. For each non compound it will call the ASN1 format
 // checker.
 func (l *Linter) walk(der []byte) {
 	var err error
