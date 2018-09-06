@@ -165,9 +165,6 @@ func checkDN(vetting string, dn []pkix.AttributeTypeAndValue) *errors.Errors {
 			if !inDN(dn, localityName) && !inDN(dn, stateOrProvinceName) {
 				e.Err("localityName or stateOrProvinceName is required if organizationName is set")
 			}
-			if !inDN(dn, stateOrProvinceName) {
-				e.Err("stateOrProvinceName is required if organizationName is set")
-			}
 			if !inDN(dn, countryName) {
 				e.Err("countryName is required if organizationName is set")
 			}
