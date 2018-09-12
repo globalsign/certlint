@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/pem"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -50,6 +51,8 @@ tfy6WBz8/93RDvNodNhlokJOibmZ8X3xvXMqAPFbeX6YLjWsl4z30ZnMUi2g+SQa
 accZ5e1iOtNIBTVUEaQ0YxNwhZqnQO4rgBFCnEpNH6TB62hXUD6u/oP/WB48Wmek
 KPgaoWHMo5sOFQnw5A==
 -----END CERTIFICATE-----`
+
+var update = flag.Bool("update", false, "Update golden files.")
 
 func TestMain(m *testing.M) {
 	build := exec.Command("go", "build")
@@ -100,7 +103,11 @@ func TestCLITestData(t *testing.T) {
 		t.Fatal(err)
 	}
 	testdata := path.Join(dir, "testdata")
-	files, _ := filepath.Glob("./testdata/*.pem")
+	dataglob := "ev*.pem"
+	if *update {
+		dataglob = "*.pem"
+	}
+	files, _ := filepath.Glob(path.Join(testdata, dataglob))
 	for _, f := range files {
 		fname := path.Base(f)
 		t.Run(fname, func(t *testing.T) {
@@ -119,9 +126,10 @@ func TestCLITestData(t *testing.T) {
 			}
 
 			// TODO: allow for programatic refresh of golden files as a test argument
-			//if *update {
-			//	ioutil.WriteFile(golden, output, 0640)
-			//}
+			if *update {
+				ioutil.WriteFile(golden, output, 0640)
+				t.Logf("Wrote new output to golden file: %s", golden)
+			}
 
 			actual := string(output)
 
