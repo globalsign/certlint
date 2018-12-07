@@ -20,18 +20,18 @@ func Check(d *certdata.Data) *errors.Errors {
 
 	switch d.Type {
 	case "EV":
-		if d.Cert.NotBefore.After(d.Cert.NotBefore.AddDate(0, 27, 0)) {
+		if d.Cert.NotAfter.After(d.Cert.NotBefore.AddDate(0, 27, 0)) {
 			e.Err("EV Certificate LifeTime exceeds 27 months")
 			return e
 		}
 	case "DV", "OV":
 		if d.Cert.NotBefore.After(time.Date(2015, 4, 1, 0, 0, 0, 0, time.UTC)) {
-			if d.Cert.NotBefore.After(d.Cert.NotBefore.AddDate(0, 39, 0)) {
+			if d.Cert.NotAfter.After(d.Cert.NotBefore.AddDate(0, 39, 0)) {
 				e.Err("Certificate LifeTime exceeds 39 months")
 				return e
 			}
 		} else {
-			if d.Cert.NotBefore.After(d.Cert.NotBefore.AddDate(0, 60, 0)) {
+			if d.Cert.NotAfter.After(d.Cert.NotBefore.AddDate(0, 60, 0)) {
 				e.Err("Certificate LifeTime exceeds 60 months")
 				return e
 			}
