@@ -139,7 +139,7 @@ func TestCLITestData(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(actual, string(expected)) {
-				t.Fatalf("actual = %T:%s\nexpected = %T:%s\n", actual, actual, expected, expected)
+				t.Fatalf("actual = %T:%s\nexpected = %T:%s\n", actual, actual, string(expected), string(expected))
 			}
 		})
 	}
