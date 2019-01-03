@@ -7,7 +7,6 @@ go:
 
 cache:
   directories:
-    - $GOPATH/src
     - $GOPATH/pkg
 
 before_install:
