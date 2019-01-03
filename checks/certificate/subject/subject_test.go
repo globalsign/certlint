@@ -27,10 +27,10 @@ func TestSubject(t *testing.T) {
 	}
 
 	e := Check(cd)
-	if len(e.List()) != 7 {
+	if len(e.List()) != 6 {
 		for _, err := range e.List() {
 			fmt.Println(err)
 		}
-		t.Errorf("Expected 7 errors, got %d", len(e.List()))
+		t.Errorf("Expected 6 errors, got %d", len(e.List()))
 	}
 }
